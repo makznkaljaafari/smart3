@@ -19,6 +19,7 @@ import { debtService } from '../../services/debtService';
 import { expenseService } from '../../services/expenseService';
 import { HoloButton } from '../../components/ui/HoloButton';
 import { Lightbulb } from 'lucide-react';
+import { AppTheme } from '../../types';
 
 export const DashboardView = () => {
     const { 
@@ -66,7 +67,7 @@ export const DashboardView = () => {
                 />
                 
                 <DashboardStatsGrid 
-                    theme={theme} t={t} lang={lang} baseCurrency={settings.baseCurrency} customizeMode={customizeMode}
+                    theme={theme as AppTheme} t={t} lang={lang} baseCurrency={settings.baseCurrency} customizeMode={customizeMode}
                     localDashboardCards={localDashboardCards} dashboardStats={dashboardStats}
                     financialHealth={financialHealth} isHealthLoading={isHealthLoading}
                     briefing={briefing} isBriefingLoading={isBriefingLoading}
@@ -90,11 +91,11 @@ export const DashboardView = () => {
                     </HoloButton>
                 </div>
 
-                <SectionBox title={t.monthlyOverview} theme={theme}>
+                <SectionBox title={t.monthlyOverview} theme={theme as AppTheme}>
                     <IncomeExpenseChart />
                 </SectionBox>
                 
-                <SectionBox title={t.predictiveAnalysis} theme={theme}>
+                <SectionBox title={t.predictiveAnalysis} theme={theme as AppTheme}>
                     <CashFlowForecastChart 
                         forecastResult={forecastResult} 
                         isLoading={isForecastLoading} 
@@ -103,7 +104,7 @@ export const DashboardView = () => {
                     />
                 </SectionBox>
                 
-                <SectionBox title={t.monthlyBudgets} theme={theme}>
+                <SectionBox title={t.monthlyBudgets} theme={theme as AppTheme}>
                     {currentMonthBudgets.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {currentMonthBudgets.map((budget) => ( 
@@ -113,7 +114,7 @@ export const DashboardView = () => {
                                     spent={spentPerCategory[budget.category] || 0} 
                                     total={budget.amount} 
                                     currency={settings.baseCurrency} 
-                                    theme={theme} 
+                                    theme={theme as AppTheme} 
                                     t={t}
                                 /> 
                             ))}
@@ -124,25 +125,25 @@ export const DashboardView = () => {
                 </SectionBox>
                 
                 <AIInsightsSection
-                    theme={theme} lang={lang} t={t} isLoading={isLoadingInsights} error={insightsError}
+                    theme={theme as AppTheme} lang={lang} t={t} isLoading={isLoadingInsights} error={insightsError}
                     insights={aiInsights} onGenerate={handleGenerateInsights} canGenerate={!!forecastResult}
                 />
             </div>
 
             {isHealthModalOpen && financialHealth?.analysis && 
-                <FinancialHealthDetailsModal analysis={financialHealth.analysis} onClose={() => setIsHealthModalOpen(false)} theme={theme} t={t} />
+                <FinancialHealthDetailsModal analysis={financialHealth.analysis} onClose={() => setIsHealthModalOpen(false)} theme={theme as AppTheme} t={t} />
             }
             {showStrategyModal && 
                 <StrategicAdviceModal adviceData={strategicAdvice} onClose={() => setShowStrategyModal(false)} isLoading={isStrategyLoading} />
             }
             {showCustomerForm && 
-                <CustomerFormModal customer={null} onClose={() => setShowCustomerForm(false)} onSave={handleSaveCustomer} theme={theme} />
+                <CustomerFormModal customer={null} onClose={() => setShowCustomerForm(false)} onSave={handleSaveCustomer} theme={theme as AppTheme} />
             }
             {showDebtForm && 
                 <DebtFormModal onClose={() => setShowDebtForm(false)} onSave={handleSaveDebt} />
             }
             {showExpenseForm && 
-                <ExpenseFormModal onClose={() => setShowExpenseForm(false)} onSave={handleSaveExpense} t={t} theme={theme} />
+                <ExpenseFormModal onClose={() => setShowExpenseForm(false)} onSave={handleSaveExpense} t={t} theme={theme as AppTheme} />
             }
         </>
     );

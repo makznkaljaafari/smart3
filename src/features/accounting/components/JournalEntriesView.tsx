@@ -22,7 +22,7 @@ const JournalEntryCard: React.FC<{ entry: JournalEntry, theme: string, t: any }>
                     <div className="flex items-center gap-2 mb-1">
                         <span className="font-mono text-xs opacity-50">#{entry.id.slice(0,8)}</span>
                         <h4 className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{entry.description}</h4>
-                        {isBalanced && <CheckCircle size={14} className="text-green-500" title="Balanced" />}
+                        {isBalanced && <CheckCircle size={14} className="text-green-500" />}
                     </div>
                     <div className="flex items-center gap-4 text-xs text-gray-500">
                         <span className="flex items-center gap-1"><CalendarIcon /> {formatDate(entry.date)}</span>
@@ -46,7 +46,6 @@ const JournalEntryCard: React.FC<{ entry: JournalEntry, theme: string, t: any }>
                         {entry.lines.map(line => (
                             <tr key={line.id}>
                                 <td className="py-2">
-                                    {/* Account Name would need lookup if not populated, assuming hook populates or we just show ID for now if name unavailable in basic type */}
                                     <span className={isDark ? 'text-gray-300' : 'text-slate-700'}>{line.accountId}</span> 
                                 </td>
                                 <td className={`py-2 text-right font-mono ${line.debit > 0 ? 'text-emerald-500' : 'opacity-20'}`}>

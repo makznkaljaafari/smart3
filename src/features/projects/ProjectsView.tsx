@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useZustandStore } from '../../store/useStore';
@@ -7,23 +8,24 @@ import { HoloButton } from '../../components/ui/HoloButton';
 import { Plus, Briefcase, Loader, ServerCrash } from 'lucide-react';
 import { Project, Toast, ProjectStatus } from '../../types';
 import { projectService } from '../../services/projectService';
+import { expenseService } from '../../services/expenseService';
+import { incomeService } from '../../services/incomeService';
 import { ProjectCard } from './components/ProjectCard';
 import { ProjectFormModal } from './components/ProjectFormModal';
 import { formatCurrency } from '../expenses/lib/utils';
+import { useQuery } from '@tanstack/react-query';
 
 export const ProjectsView: React.FC = () => {
-    const { theme, lang, settings, authUser, projects, expenses, income, projectsLoading, projectsError } = useZustandStore(state => ({
+    const { theme, lang, settings, authUser, projects, projectsLoading, projectsError } = useZustandStore(state => ({
         theme: state.theme,
         lang: state.lang,
         settings: state.settings,
         authUser: state.authUser,
         projects: state.projects,
-        expenses: state.expenses,
-        income: state.income,
         projectsLoading: state.projectsLoading,
         projectsError: state.projectsError,
     }));
-    const { fetchProjects } = useZustandStore.getState();
+    const { fetchProjects, currentCompany } = useZustandStore.getState();
     const t = translations[lang];
     const navigate = useNavigate();
 
@@ -34,6 +36,26 @@ export const ProjectsView: React.FC = () => {
     const addToast = useCallback((message: string, type: Toast['type'] = 'info') => {
         useZustandStore.setState(s => ({ toasts: [...s.toasts, { id: crypto.randomUUID(), message, type }] }));
     }, []);
+
+    // Fetch all expenses and income to calculate project profitability
+    // Note: For large datasets, this should be done via a dedicated backend view/RPC
+    const { data: expensesData } = useQuery({
+        queryKey: ['allExpensesForProjects', currentCompany?.id],
+        queryFn: async () => {
+            const { data } = await expenseService.getExpenses();
+            return data;
+        },
+        enabled: !!currentCompany?.id
+    });
+
+    const { data: incomeData } = useQuery({
+        queryKey: ['allIncomeForProjects', currentCompany?.id],
+        queryFn: async () => {
+            const { data } = await incomeService.getIncome();
+            return data;
+        },
+        enabled: !!currentCompany?.id
+    });
 
     const handleOpenForm = (project: Project | null = null) => {
         setEditingProject(project);
@@ -72,9 +94,11 @@ export const ProjectsView: React.FC = () => {
     };
     
     const projectsWithCalculations = useMemo(() => {
+        const expenses = expensesData || [];
+        const income = incomeData || [];
         return projects.map(project => {
-            const projectExpenses = expenses.filter(e => e.projectId === project.id).reduce((sum, e) => sum + e.amount, 0);
-            const projectIncome = income.filter(i => i.projectId === project.id).reduce((sum, i) => sum + i.amount, 0);
+            const projectExpenses = expenses.filter((e: any) => e.projectId === project.id).reduce((sum: number, e: any) => sum + e.amount, 0);
+            const projectIncome = income.filter((i: any) => i.projectId === project.id).reduce((sum: number, i: any) => sum + i.amount, 0);
             return {
                 ...project,
                 totalExpenses: projectExpenses,
@@ -82,7 +106,7 @@ export const ProjectsView: React.FC = () => {
                 netProfit: projectIncome - projectExpenses
             };
         });
-    }, [projects, expenses, income]);
+    }, [projects, expensesData, incomeData]);
 
     const filteredProjects = useMemo(() => {
         if (statusFilter === 'all') {
@@ -97,8 +121,8 @@ export const ProjectsView: React.FC = () => {
         return {
             activeCount: active.length,
             completedCount: completed.length,
-            totalBudget: active.reduce((sum, p) => sum + (p.budget || 0), 0),
-            overallProfit: completed.reduce((sum, p) => sum + p.netProfit, 0),
+            totalBudget: active.reduce((sum: number, p: any) => sum + (p.budget || 0), 0),
+            overallProfit: completed.reduce((sum: number, p: any) => sum + p.netProfit, 0),
         };
     }, [projectsWithCalculations]);
 

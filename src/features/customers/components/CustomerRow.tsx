@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { CurrencyCode, ExchangeRate } from '../../../types';
+import { CurrencyCode, ExchangeRate, AppTheme } from '../../../types';
 import { Customer } from '../types';
 import { Edit2, Trash2, Eye } from 'lucide-react';
 import { convertCurrency } from '../../../lib/currency';
@@ -11,7 +11,7 @@ interface CustomerRowProps {
     onView: () => void;
     onEdit: () => void;
     onDelete: () => void;
-    theme: 'light' | 'dark';
+    theme: AppTheme;
     lang: 'ar' | 'en';
     baseCurrency: CurrencyCode;
     exchangeRates: ExchangeRate[];
@@ -26,8 +26,10 @@ export const CustomerRow: React.FC<CustomerRowProps> = React.memo(({ customer, o
         ? convertCurrency(customer.remainingDebt, customer.currency as CurrencyCode, baseCurrency, exchangeRates)
         : null;
 
+    const isDark = theme !== 'light';
+
     return (
-        <tr className={`${theme === 'dark' ? 'hover:bg-gray-800/50' : 'hover:bg-slate-50'} ${isSelected ? (theme === 'dark' ? 'bg-cyan-900/50' : 'bg-cyan-50') : ''}`}>
+        <tr className={`${isDark ? 'hover:bg-gray-800/50' : 'hover:bg-slate-50'} ${isSelected ? (isDark ? 'bg-cyan-900/50' : 'bg-cyan-50') : ''}`}>
              <td className="p-4 whitespace-nowrap text-center" data-label="">
                 <input
                     type="checkbox"
@@ -49,12 +51,12 @@ export const CustomerRow: React.FC<CustomerRowProps> = React.memo(({ customer, o
             <td className="p-4 whitespace-nowrap" data-label="المخاطر"><span className={risk.className}>{risk.label}</span></td>
             <td className="p-4 whitespace-nowrap font-mono" data-label="الدين المتبقي">
                 <div className="text-orange-500">{formatCurrency(customer.remainingDebt, customer.currency)}</div>
-                {convertedRemaining !== null && <div className={`text-xs ${theme === 'dark' ? 'text-slate-500' : 'text-slate-500'}`}>~{formatCurrency(convertedRemaining, baseCurrency)}</div>}
+                {convertedRemaining !== null && <div className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>~{formatCurrency(convertedRemaining, baseCurrency)}</div>}
             </td>
             <td className="p-4 whitespace-nowrap text-right" data-label="إجراءات">
                 <div className="relative inline-block">
-                    <button onClick={onView} className={`p-2 rounded-lg ${theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-slate-200'}`}><Eye size={18} /></button>
-                    <button onClick={onEdit} className={`p-2 rounded-lg ${theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-slate-200'}`}><Edit2 size={18} /></button>
+                    <button onClick={onView} className={`p-2 rounded-lg ${isDark ? 'hover:bg-gray-700' : 'hover:bg-slate-200'}`}><Eye size={18} /></button>
+                    <button onClick={onEdit} className={`p-2 rounded-lg ${isDark ? 'hover:bg-gray-700' : 'hover:bg-slate-200'}`}><Edit2 size={18} /></button>
                     <button onClick={onDelete} className={`p-2 rounded-lg text-red-500 hover:bg-red-500/10`}><Trash2 size={18} /></button>
                 </div>
             </td>

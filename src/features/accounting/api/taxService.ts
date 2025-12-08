@@ -36,11 +36,11 @@ export const taxService = {
     if (purchaseError) return { data: null, error: purchaseError };
 
     // 3. Aggregate
-    const totalSalesTaxable = sales.reduce((sum, inv) => sum + inv.subtotal, 0);
-    const totalOutputTax = sales.reduce((sum, inv) => sum + inv.tax_total, 0);
+    const totalSalesTaxable = sales.reduce((sum: number, inv: any) => sum + inv.subtotal, 0);
+    const totalOutputTax = sales.reduce((sum: number, inv: any) => sum + inv.tax_total, 0);
 
-    const totalPurchasesTaxable = purchases.reduce((sum, inv) => sum + inv.subtotal, 0);
-    const totalInputTax = purchases.reduce((sum, inv) => sum + inv.tax_total, 0);
+    const totalPurchasesTaxable = purchases.reduce((sum: number, inv: any) => sum + inv.subtotal, 0);
+    const totalInputTax = purchases.reduce((sum: number, inv: any) => sum + inv.tax_total, 0);
 
     const netTaxPayable = totalOutputTax - totalInputTax;
 

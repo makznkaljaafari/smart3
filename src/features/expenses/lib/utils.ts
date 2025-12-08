@@ -65,7 +65,7 @@ export const getPriorityLabel = (priority: ExpensePriority) => ({
 }[priority]);
 
 export const getPaymentMethodLabel = (method: PaymentMethod) => ({
-  cash: 'نقداً', bank_transfer: 'تحويل بنكي', check: 'شيك', card: 'بطاقة', credit: 'آجل', exchange: 'صرافة', other: 'أخرى'
+  cash: 'نقداً', bank_transfer: 'تحويل بنكي', cheque: 'شيك', credit_card: 'بطاقة', credit: 'آجل', exchange: 'صرافة', other: 'أخرى'
 }[method]);
 
 export const getRecurrenceLabel = (recurrence: RecurrenceType) => ({

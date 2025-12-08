@@ -8,8 +8,6 @@ import { InvoiceItemsTable } from '../../invoices/components/InvoiceItemsTable';
 import { InvoiceHeaderModal } from './InvoiceHeaderModal';
 import { useSalesInvoice } from '../hooks/useSalesInvoice';
 import { Keyboard } from 'lucide-react';
-
-// New components
 import { InvoiceHeader } from './invoice/InvoiceHeader';
 import { InvoiceConfiguration } from './invoice/InvoiceConfiguration';
 import { InvoiceFooter } from './invoice/InvoiceFooter';
@@ -108,7 +106,7 @@ export const NewSalesInvoice: React.FC = () => {
             <div className="relative mt-6">
                 <InvoiceItemsTable 
                     items={items} 
-                    onItemChange={handleItemChange} 
+                    onItemChange={(id, field, val) => handleItemChange(id, field as any, val)} 
                     onRemoveItem={handleRemoveItem} 
                     onOpenProductModal={() => setIsProductModalOpen(true)} 
                     stockWarnings={stockWarnings} 

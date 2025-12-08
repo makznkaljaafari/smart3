@@ -6,7 +6,7 @@ export type PageSettings = {
   customers: { visibleCols: string[]; pageSize: number };
   debts: { visibleCols: string[]; pageSize: number; reminders: { beforeDays: number[] } };
   expenses: { visibleCols: string[]; pageSize: number };
-  notes: { allowAudio: boolean; allowImages: boolean };
+  notes: { allowAudio: boolean; allowImages: boolean; pageSize: number }; // Added pageSize
   inventory: { pageSize: number };
 };
 

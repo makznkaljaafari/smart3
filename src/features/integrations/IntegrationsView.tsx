@@ -8,7 +8,7 @@ import { IntegrationConnections } from './components/IntegrationConnections';
 import { ActivityLog } from './components/ActivityLog';
 import { IntegrationRoadmap } from './components/IntegrationRoadmap';
 import { WebhooksManager } from './components/WebhooksManager';
-import { SettingsState } from '../../types';
+import { SettingsState, AppTheme } from '../../types';
 import { profileService } from '../../services/profileService';
 import { HoloButton } from '../../components/ui/HoloButton';
 
@@ -65,7 +65,7 @@ export const IntegrationsView: React.FC = () => {
     ];
     
     const renderContent = () => {
-        const commonProps = { localSettings, setLocalSettings, t, theme, lang };
+        const commonProps = { localSettings, setLocalSettings, t, theme: theme as AppTheme, lang };
         switch(activeTab) {
             case 'rules': return <AutomationRules {...commonProps} />;
             case 'connections': return <IntegrationConnections {...commonProps} />;

@@ -5,7 +5,7 @@ import { translations } from '../../../lib/i18n';
 import { eventBus } from '../../../lib/events';
 import { Income, IncomeCategory, AppEvent, LangCode, Toast, JournalEntry } from '../../../types';
 import { incomeService } from '../api/incomeService';
-import { journalEntryService } from '../../../services/journalEntryService';
+import { journalService } from '../../../services/accounting/journalService';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 
 export const useIncomeData = () => {
@@ -15,7 +15,6 @@ export const useIncomeData = () => {
         settings: state.settings,
         currentCompany: state.currentCompany,
     }));
-    const { fetchJournalEntries } = useZustandStore.getState();
     const t = translations[lang];
     const queryClient = useQueryClient();
 
@@ -111,8 +110,9 @@ export const useIncomeData = () => {
                             { id: '', accountId: originalData.incomeAccountId, debit: 0, credit: originalData.amount },
                         ]
                     };
-                    // Fire and forget (or handle error silently) for journal entry to not block UI
-                    await journalEntryService.saveJournalEntry(journalEntry).then(() => fetchJournalEntries());
+                    // Fire and forget for journal entry
+                    await journalService.saveJournalEntry(journalEntry)
+                        .then(() => queryClient.invalidateQueries({ queryKey: ['journalEntries'] }));
                  }
             }
             
@@ -163,7 +163,7 @@ export const useIncomeData = () => {
         stats,
         filters,
         setFilters,
-        filteredIncome: income, // Using fetched data directly as filtered
+        filteredIncome: income,
         showFormModal,
         editingIncome,
         isLoading,

@@ -9,6 +9,7 @@ import { IncomeCard } from './components/IncomeCard';
 import { IncomeFormModal } from './components/IncomeFormModal';
 import { IncomeCategory } from '../../types';
 import { useIncomeData } from './hooks/useIncomeData';
+import { AppTheme } from '../../types';
 
 const INCOME_CATEGORY_CONFIG: Record<IncomeCategory, { label: string; icon: React.ElementType }> = {
   product_sales: { label: 'مبيعات منتجات', icon: Tag },
@@ -65,7 +66,7 @@ export const IncomeView: React.FC = () => {
     if (filteredIncome.length > 0) {
       return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredIncome.map(i => <IncomeCard key={i.id} income={i} theme={theme} onEdit={handleEdit} onDelete={handleDelete} onViewDetails={()=>{}} />)}
+          {filteredIncome.map(i => <IncomeCard key={i.id} income={i} theme={theme as AppTheme} onEdit={handleEdit} onDelete={handleDelete} onViewDetails={()=>{}} />)}
         </div>
       );
     }
@@ -83,9 +84,9 @@ export const IncomeView: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <SciFiCard theme={theme} title="إجمالي إيرادات الشهر" value={formatCurrency(stats.totalThisMonth, currency)} icon={BarChart3} color="green" />
-        <SciFiCard theme={theme} title="أعلى مصدر دخل" value={stats.highestSource} icon={Tag} color="purple" />
-        <SciFiCard theme={theme} title="إجمالي السجلات" value={stats.totalEntries.toString()} icon={Copy} color="cyan" />
+        <SciFiCard theme={theme as AppTheme} title="إجمالي إيرادات الشهر" value={formatCurrency(stats.totalThisMonth, currency)} icon={BarChart3} color="green" />
+        <SciFiCard theme={theme as AppTheme} title="أعلى مصدر دخل" value={stats.highestSource} icon={Tag} color="purple" />
+        <SciFiCard theme={theme as AppTheme} title="إجمالي السجلات" value={stats.totalEntries.toString()} icon={Copy} color="cyan" />
       </div>
 
       <div className={`p-4 rounded-2xl border bg-[rgb(var(--bg-secondary-rgb))] border-[rgb(var(--border-primary-rgb))]`}>
@@ -99,7 +100,7 @@ export const IncomeView: React.FC = () => {
       
       {renderContent()}
 
-      {showFormModal && <IncomeFormModal theme={theme} t={t} income={editingIncome || undefined} onClose={handleCloseForm} onSave={handleSave} />}
+      {showFormModal && <IncomeFormModal theme={theme as AppTheme} t={t} income={editingIncome || undefined} onClose={handleCloseForm} onSave={handleSave} />}
     </div>
   );
 };

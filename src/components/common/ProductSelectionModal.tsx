@@ -96,7 +96,7 @@ export const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({ is
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredProducts.map((product, index) => (
+                  {filteredProducts.map((product: Product, index: number) => (
                     <tr 
                       key={product.id} 
                       className={`cursor-pointer transition-colors ${theme === 'dark' ? 'hover:bg-cyan-900/20' : 'hover:bg-cyan-50'}`}

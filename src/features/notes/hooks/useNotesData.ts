@@ -32,7 +32,9 @@ export const useNotesData = () => {
     });
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = settings.page.notes?.pageSize || 12; 
+    
+    // Check if pageSize exists on settings.page.notes, else default to 12
+    const pageSize = settings.page.notes && 'pageSize' in settings.page.notes ? settings.page.notes.pageSize : 12; 
 
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
     const [selectedNote, setSelectedNote] = useState<Note | null>(null);
@@ -123,7 +125,6 @@ export const useNotesData = () => {
                     syncService.enqueue({ type: 'UPDATE_NOTE', payload: offlineNote });
                 }
                 
-                // Return offline data to trigger onSuccess for optimistic UI
                 return { offline: true, data: offlineNote, isNew: data.isNew };
             }
 
@@ -143,7 +144,6 @@ export const useNotesData = () => {
         onError: (err: any) => addToast(err.message, 'error')
     });
 
-    // Delete with Optimistic Update
     const deleteMutation = useMutation({
         mutationFn: async (id: string) => {
             if (isOffline) {
@@ -191,7 +191,6 @@ export const useNotesData = () => {
     const toggleMutation = useMutation({
         mutationFn: async (data: { id: string, key: 'isPinned' | 'isFavorite', value: boolean }) => {
              if (isOffline) {
-                 // For toggle, we can treat it as an update in offline queue
                  const note = notes.find(n => n.id === data.id);
                  if (note) {
                      const updatedNote = { ...note, [data.key]: data.value };
@@ -208,7 +207,6 @@ export const useNotesData = () => {
         onError: (err: any) => addToast(err.message, 'error')
     });
 
-    // Handlers
     const handleCloseModals = useCallback(() => {
         setShowDetailsModal(false);
         setShowFormModal(false);
@@ -250,9 +248,14 @@ export const useNotesData = () => {
     const handleViewDetails = (note: Note) => { setSelectedNote(note); setShowDetailsModal(true); };
     const handleEdit = (note: Note) => { setEditingNote(note); setShowFormModal(true); };
     
-    const handleSort = (field: SortField) => {
-        if (sort.field === field) setSort(prev => ({ ...prev, order: prev.order === 'asc' ? 'desc' : 'asc' }));
-        else setSort({ field, order: 'desc' });
+    const handleSort = (field: string) => {
+         // Cast string to specific sort field or ignore if invalid
+         const validFields: SortField[] = ['date', 'title', 'priority', 'category'];
+         if (validFields.includes(field as SortField)) {
+            const safeField = field as SortField;
+            if (sort.field === safeField) setSort(prev => ({ ...prev, order: prev.order === 'asc' ? 'desc' : 'asc' }));
+            else setSort({ field: safeField, order: 'desc' });
+         }
     };
 
     return {

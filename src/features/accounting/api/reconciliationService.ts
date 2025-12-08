@@ -27,7 +27,7 @@ export const reconciliationService = {
 
         const transactions: ReconciliationTransaction[] = (data || []).map((line: any) => ({
             id: line.id,
-            date: line.journal_entries?.entry_date,
+            date: line.journal_entries?.entry_date || '', // Default empty string
             description: line.journal_entries?.description || line.note || 'Transaction',
             amount: line.debit - line.credit, 
             isCleared: false // Initially unchecked in UI

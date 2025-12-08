@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Customer } from '../../../types';
+import { Customer } from '../../types';
 import { Phone, Mail, MapPin, Users, User } from 'lucide-react';
 import { useZustandStore } from '../../../../store/useStore';
 

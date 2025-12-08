@@ -19,6 +19,7 @@ import { EmptyState } from '../../components/common/EmptyState';
 import { DataTable, DataTableColumn } from '../../components/ui/DataTable';
 import { Input } from '../../components/ui/Input';
 import { Customer } from './types';
+import { AppTheme } from '../../types';
 
 export const CustomersView: React.FC = () => {
   const { theme, lang, settings } = useZustandStore(state => ({
@@ -27,7 +28,7 @@ export const CustomersView: React.FC = () => {
     settings: state.settings
   }));
   const t = translations[lang];
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
 
   const {
     stats,
@@ -162,10 +163,10 @@ export const CustomersView: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <SciFiCard theme={theme} title="إجمالي العملاء" value={stats.total.toString()} icon={Users} color="cyan" />
-        <SciFiCard theme={theme} title="العملاء النشطون" value={stats.active.toString()} icon={User} color="green" />
-        <SciFiCard theme={theme} title="عملاء عالي المخاطر" value={stats.highRisk.toString()} icon={AlertCircle} color="orange" />
-        <SciFiCard theme={theme} title="إجمالي الديون" value={formatCurrency(stats.totalDebt, settings.baseCurrency)} icon={DollarSign} color="purple" />
+        <SciFiCard theme={theme as AppTheme} title="إجمالي العملاء" value={stats.total.toString()} icon={Users} color="cyan" />
+        <SciFiCard theme={theme as AppTheme} title="العملاء النشطون" value={stats.active.toString()} icon={User} color="green" />
+        <SciFiCard theme={theme as AppTheme} title="عملاء عالي المخاطر" value={stats.highRisk.toString()} icon={AlertCircle} color="orange" />
+        <SciFiCard theme={theme as AppTheme} title="إجمالي الديون" value={formatCurrency(stats.totalDebt, settings.baseCurrency)} icon={DollarSign} color="purple" />
       </div>
 
       <div className={`p-4 rounded-2xl border flex flex-col lg:flex-row gap-4 justify-between items-center ${isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-slate-200 shadow-sm'}`}>

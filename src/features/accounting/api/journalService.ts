@@ -1,7 +1,9 @@
+
 import { supabase } from '../../../lib/supabaseClient';
 import { JournalEntry } from '../types';
 import { getStore } from '../../../lib/storeAccess';
 
+// Correct schema columns
 const JOURNAL_ENTRY_SELECT = `
   id,
   company_id,
@@ -32,6 +34,9 @@ export interface GetJournalEntriesParams {
 }
 
 export const journalService = {
+  /**
+   * Fetches all journal entries for the current company (Legacy/Export).
+   */
   async getJournalEntries() {
     const companyId = getStore().getState().currentCompany?.id;
     if (!companyId) return { data: [], error: new Error("No active company") };
@@ -49,20 +54,24 @@ export const journalService = {
       company_id: entry.company_id,
       date: entry.entry_date,
       description: entry.description,
-      createdBy: entry.created_by, 
+      createdBy: entry.created_by || '', // Added default empty string
       referenceType: entry.reference_type,
       referenceId: entry.reference_id,
       lines: (entry.lines || []).map((line: any) => ({
         id: line.id,
         accountId: line.account_id,
         debit: line.debit,
-        credit: line.credit
+        credit: line.credit,
+        note: line.note
       }))
     }));
 
     return { data: mappedData as JournalEntry[], error: null };
   },
 
+  /**
+   * Fetches paginated journal entries.
+   */
   async getJournalEntriesPaginated({ 
       page = 1, 
       pageSize = 10, 
@@ -104,20 +113,24 @@ export const journalService = {
         company_id: entry.company_id,
         date: entry.entry_date,
         description: entry.description,
-        createdBy: entry.created_by,
+        createdBy: entry.created_by || '',
         referenceType: entry.reference_type,
         referenceId: entry.reference_id,
         lines: (entry.lines || []).map((line: any) => ({
           id: line.id,
           accountId: line.account_id,
           debit: line.debit,
-          credit: line.credit
+          credit: line.credit,
+          note: line.note
         }))
       }));
 
       return { data: mappedData as JournalEntry[], count: count || 0, error: null };
   },
 
+  /**
+   * Saves a manual journal entry directly to the database.
+   */
   async saveJournalEntry(entryData: Omit<JournalEntry, 'id' | 'company_id'>) {
     const companyId = getStore().getState().currentCompany?.id;
     const userId = getStore().getState().authUser?.id;
@@ -199,7 +212,6 @@ export const journalService = {
         netPayable: number; 
         period: string;
     }) {
-        // Logic reused from previous implementation
         const companyId = getStore().getState().currentCompany?.id;
         const user = getStore().getState().authUser;
         if(!companyId) throw new Error("No Company");
@@ -220,7 +232,7 @@ export const journalService = {
         await this.saveJournalEntry({
             date: new Date().toISOString().split('T')[0],
             description: `VAT Settlement - ${params.period}`,
-            createdBy: user?.name,
+            createdBy: user?.name || '',
             referenceType: 'tax_return',
             lines: lines as any[]
         });

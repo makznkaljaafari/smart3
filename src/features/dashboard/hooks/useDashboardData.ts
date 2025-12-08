@@ -100,9 +100,9 @@ export const useDashboardData = () => {
         const pnl = incomeStatement?.data || [];
         const receivables = accounts
             .filter(a => a.account_type === 'asset' && (a.account_id === settings.accounting.defaultAccountsReceivableId || a.account_name.includes('Receivable') || a.account_name.includes('الذمم المدينة')))
-            .reduce((sum, a) => sum + a.balance, 0);
-        const totalIncome = pnl.filter(a => a.account_type === 'revenue').reduce((sum, a) => sum + a.net_amount, 0);
-        const totalExpenses = pnl.filter(a => a.account_type === 'expense').reduce((sum, a) => sum + a.net_amount, 0);
+            .reduce((sum: number, a: any) => sum + a.balance, 0);
+        const totalIncome = pnl.filter(a => a.account_type === 'revenue').reduce((sum: number, a: any) => sum + a.net_amount, 0);
+        const totalExpenses = pnl.filter(a => a.account_type === 'expense').reduce((sum: number, a: any) => sum + a.net_amount, 0);
 
         return {
             totalDebts: { value: receivables, trend: 0 },
@@ -129,9 +129,9 @@ export const useDashboardData = () => {
     const generateBriefing = useCallback(async () => {
         setIsBriefingLoading(true);
         try {
-            const totalRevenue = incomeStatement?.data?.filter(r => r.account_type === 'revenue').reduce((sum, r) => sum + r.net_amount, 0) || 0;
-            const totalExpenses = incomeStatement?.data?.filter(r => r.account_type === 'expense').reduce((sum, r) => sum + r.net_amount, 0) || 0;
-            const cashOnHand = accountBalances?.data?.filter(a => a.account_type === 'asset' && (a.account_name.toLowerCase().includes('cash') || a.account_name.includes('نقد'))).reduce((sum, a) => sum + a.balance, 0) || 0;
+            const totalRevenue = incomeStatement?.data?.filter(r => r.account_type === 'revenue').reduce((sum: number, r: any) => sum + r.net_amount, 0) || 0;
+            const totalExpenses = incomeStatement?.data?.filter(r => r.account_type === 'expense').reduce((sum: number, r: any) => sum + r.net_amount, 0) || 0;
+            const cashOnHand = accountBalances?.data?.filter(a => a.account_type === 'asset' && (a.account_name.toLowerCase().includes('cash') || a.account_name.includes('نقد'))).reduce((sum: number, a: any) => sum + a.balance, 0) || 0;
 
             const prompt = `You are a financial advisor AI. Write a short daily briefing in ${lang}. Data: Revenue YTD: ${totalRevenue}, Expenses YTD: ${totalExpenses}, Cash: ${cashOnHand}. Keep it concise (2-3 sentences).`;
             
@@ -245,7 +245,7 @@ export const useDashboardData = () => {
         setIsStrategyLoading(true);
         setShowStrategyModal(true);
         try {
-            const cashOnHand = accountBalances?.data?.filter(a => a.account_type === 'asset' && (a.account_name.toLowerCase().includes('cash') || a.account_name.includes('نقد'))).reduce((sum, a) => sum + a.balance, 0) || 0;
+            const cashOnHand = accountBalances?.data?.filter(a => a.account_type === 'asset' && (a.account_name.toLowerCase().includes('cash') || a.account_name.includes('نقد'))).reduce((sum: number, a: any) => sum + a.balance, 0) || 0;
             const inventoryValue = inventoryLevels.reduce((sum, l) => sum + (l.quantity * 50), 0); 
             const burnRate = (dashboardStats.totalExpenses.value || 0) / 12; 
 

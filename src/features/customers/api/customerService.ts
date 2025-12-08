@@ -87,7 +87,7 @@ export const customerService = {
               paidAmount: 0,
               remainingDebt: 0,
               lastTransaction: undefined,
-              avatar: null
+              avatar: undefined
           }));
 
           return { data: mappedData, count: count || 0, error: null };
@@ -117,7 +117,7 @@ export const customerService = {
           
           const [activeRes, highRiskRes, debtRes] = await Promise.all([activeQuery, highRiskQuery, debtQuery]);
           
-          const totalDebt = debtRes.data?.reduce((sum, d: any) => sum + (d.remaining_amount || 0), 0) || 0;
+          const totalDebt = debtRes.data?.reduce((sum: number, d: any) => sum + (d.remaining_amount || 0), 0) || 0;
 
           return {
               data: {
@@ -196,7 +196,7 @@ export const customerService = {
               createdAt: data.created_at,
               updatedAt: data.updated_at,
               totalTransactions: data.total_transactions || 0,
-              avatar: null,
+              avatar: undefined,
               totalDebt: 0,
               paidAmount: 0,
               remainingDebt: 0,

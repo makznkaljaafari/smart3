@@ -18,6 +18,7 @@ import { ExpenseStatus, ExpensePriority } from './types';
 import { SciFiCard } from '../../components/ui/SciFiCard';
 import { formatCurrency } from './lib/utils';
 import { eventBus } from '../../lib/events';
+import { AppTheme } from '../../types';
 
 export const ExpensesView: React.FC = () => {
   const { theme, lang, currency } = useZustandStore(state => ({
@@ -85,9 +86,9 @@ export const ExpensesView: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <SciFiCard theme={theme} title={t.totalExpensesThisMonth} value={formatCurrency(stats.totalThisMonth, currency)} icon={BarChart3} color="cyan" />
-        <SciFiCard theme={theme} title={t.mostSpentCategory} value={stats.mostSpentCategory} icon={Tag} color="purple" />
-        <SciFiCard theme={theme} title={t.totalEntries} value={stats.totalEntries.toString()} icon={Copy} color="green" />
+        <SciFiCard theme={theme as AppTheme} title={t.totalExpensesThisMonth} value={formatCurrency(stats.totalThisMonth, currency)} icon={BarChart3} color="cyan" />
+        <SciFiCard theme={theme as AppTheme} title={t.mostSpentCategory} value={stats.mostSpentCategory} icon={Tag} color="purple" />
+        <SciFiCard theme={theme as AppTheme} title={t.totalEntries} value={stats.totalEntries.toString()} icon={Copy} color="green" />
       </div>
 
       <div className={`p-4 rounded-2xl border bg-[rgb(var(--bg-secondary-rgb))] border-[rgb(var(--border-primary-rgb))] shadow-sm`}>
@@ -115,19 +116,19 @@ export const ExpensesView: React.FC = () => {
         <>
           <div className="block lg:hidden">
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {paginatedExpenses.map(e => <ExpenseCard key={e.id} expense={e} theme={theme} onEdit={() => handleEdit(e)} onDelete={() => handleDelete(e.id)} onViewDetails={() => handleViewDetails(e)} onPay={handlePay} />)}
+              {paginatedExpenses.map(e => <ExpenseCard key={e.id} expense={e} theme={theme as AppTheme} onEdit={() => handleEdit(e)} onDelete={() => handleDelete(e.id)} onViewDetails={() => handleViewDetails(e)} onPay={handlePay} />)}
             </div>
           </div>
           <div className="hidden lg:block">
             {viewMode === 'grid' ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {paginatedExpenses.map(e => <ExpenseCard key={e.id} expense={e} theme={theme} onEdit={() => handleEdit(e)} onDelete={() => handleDelete(e.id)} onViewDetails={() => handleViewDetails(e)} onPay={handlePay} />)}
+                {paginatedExpenses.map(e => <ExpenseCard key={e.id} expense={e} theme={theme as AppTheme} onEdit={() => handleEdit(e)} onDelete={() => handleDelete(e.id)} onViewDetails={() => handleViewDetails(e)} onPay={handlePay} />)}
               </div>
             ) : (
               <div className={`rounded-lg overflow-x-auto border border-[rgb(var(--border-primary-rgb))] bg-[rgb(var(--bg-secondary-rgb))]`}>
                 <table className="w-full text-sm">
                   <thead className={`bg-[rgb(var(--bg-tertiary-rgb))]`}><tr className="text-left">{['المصروف', 'المبلغ', 'التاريخ', 'الحالة', 'الأولوية', 'إجراءات'].map(h => <th key={h} className="p-4 font-semibold">{h}</th>)}</tr></thead>
-                  <tbody>{paginatedExpenses.map(e => <ExpenseRow key={e.id} expense={e} theme={theme} onEdit={() => handleEdit(e)} onDelete={() => handleDelete(e.id)} onViewDetails={() => handleViewDetails(e)} onPay={handlePay} />)}</tbody>
+                  <tbody>{paginatedExpenses.map(e => <ExpenseRow key={e.id} expense={e} theme={theme as AppTheme} onEdit={() => handleEdit(e)} onDelete={() => handleDelete(e.id)} onViewDetails={() => handleViewDetails(e)} onPay={handlePay} />)}</tbody>
                 </table>
               </div>
             )}
@@ -150,8 +151,8 @@ export const ExpensesView: React.FC = () => {
         </div>
       )}
 
-      {showDetailsModal && selectedExpense && <ExpenseDetailsModal t={t} theme={theme} expense={selectedExpense} onClose={handleCloseDetails} onEdit={handleEdit} />}
-      {showFormModal && <ExpenseFormModal t={t} theme={theme} expense={editingExpense || undefined} onClose={handleCloseForm} onSave={handleSave} />}
+      {showDetailsModal && selectedExpense && <ExpenseDetailsModal t={t} theme={theme as AppTheme} expense={selectedExpense} onClose={handleCloseDetails} onEdit={handleEdit} />}
+      {showFormModal && <ExpenseFormModal t={t} theme={theme as AppTheme} expense={editingExpense || undefined} onClose={handleCloseForm} onSave={handleSave} />}
     </div>
   );
 };

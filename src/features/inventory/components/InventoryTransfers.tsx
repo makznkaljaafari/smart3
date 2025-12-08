@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { useZustandStore } from '../../../store/useStore';
 import { translations } from '../../../lib/i18n';
@@ -9,6 +10,7 @@ import { InventoryTransferDetailsModal } from './InventoryTransferDetailsModal';
 import { Plus, ArrowRightLeft, ServerCrash } from 'lucide-react';
 import { LoadingState } from '../../../components/common/LoadingState';
 import { EmptyState } from '../../../components/common/EmptyState';
+import { InventoryTransfer } from '../../../types';
 
 export const InventoryTransfers: React.FC = () => {
     const { theme, settings } = useZustandStore(state => ({
@@ -82,7 +84,7 @@ export const InventoryTransfers: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {transfers.map((transfer, index) => (
+                        {transfers.map((transfer: InventoryTransfer, index: number) => (
                             <InventoryTransferRow 
                                 key={transfer.id}
                                 transfer={transfer}

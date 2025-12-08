@@ -36,7 +36,7 @@ export const defaultSettings: SettingsState = {
     customers: { visibleCols: ['name', 'phone', 'risk'], pageSize: 10 },
     debts: { visibleCols: ['customer', 'amount', 'currency', 'dueDate', 'status'], pageSize: 10, reminders: { beforeDays: [3, 1] } },
     expenses: { visibleCols: ['category', 'amount', 'currency', 'date'], pageSize: 10 },
-    notes: { allowAudio: true, allowImages: true },
+    notes: { allowAudio: true, allowImages: true, pageSize: 12 },
     inventory: { pageSize: 15 },
   },
   integrations: {

@@ -4,9 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useZustandStore } from '../../store/useStore';
 import { translations } from '../../lib/i18n';
 import { ROUTES } from '../../constants/routes';
-import { Search, Activity, Users, Wallet, CreditCard, BarChart3, Settings, Package, ShoppingCart, Truck, Building, CornerDownLeft, Loader, FileText, LayoutGrid } from 'lucide-react';
-import { Customer } from '../../features/customers/types';
-import { Product } from '../../features/inventory/types';
+import { Search, Activity, Users, Wallet, CreditCard, BarChart3, Settings, Package, ShoppingCart, Truck, Building, CornerDownLeft, Loader } from 'lucide-react';
 import { customerService } from '../../services/customerService';
 import { inventoryService } from '../../services/inventoryService';
 
@@ -79,7 +77,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ onClose }) => {
                   subtitle: c.phone,
                   icon: Users,
                   data: c,
-                  path: ROUTES.CUSTOMERS // Or specific detail route
+                  path: ROUTES.CUSTOMERS 
               }));
 
               const products: CommandItem[] = productsResponse.data.map(p => ({
@@ -108,7 +106,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ onClose }) => {
 
   const filteredItems = useMemo(() => {
     const lowerQuery = query.toLowerCase();
-    const pageResults = pages.filter(p => p.title.toLowerCase().includes(lowerQuery));
+    const pageResults = pages.filter((p: CommandItem) => p.title.toLowerCase().includes(lowerQuery));
     return [...pageResults, ...customerResults, ...productResults];
   }, [query, pages, customerResults, productResults]);
 
@@ -118,13 +116,10 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ onClose }) => {
 
   useEffect(() => {
     setSelectedIndex(0);
-  }, [filteredItems]); // Reset selection when results change
+  }, [filteredItems]); 
 
   const handleSelect = (item: CommandItem) => {
     if (item.path) {
-        // If it's a specific item, we might want to navigate to the page with a filter or modal state
-        // For simplicity, we navigate to the main page now.
-        // In a more complex app, we would pass state to the route.
         navigate(item.path);
     }
     onClose();

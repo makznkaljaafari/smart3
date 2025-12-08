@@ -29,11 +29,12 @@ export const BudgetSettings: React.FC<BudgetSettingsProps> = ({ localSettings, s
 
   const { data: expenseStats } = useQuery({
         queryKey: ['expenseStats', currentCompany?.id],
-        queryFn: expenseService.getExpenseStats,
+        queryFn: () => expenseService.getExpenseStats(),
         enabled: !!currentCompany?.id,
   });
   
-  const expenses = expenseStats?.data || [];
+  // Use optional chaining or default empty array
+  const expenses = (expenseStats as any)?.data || [];
 
   const handleBudgetChange = (category: ExpenseCategory, amount: string) => {
     const numericAmount = parseFloat(amount) || 0;
@@ -71,11 +72,9 @@ export const BudgetSettings: React.FC<BudgetSettingsProps> = ({ localSettings, s
   
   const handleSuggest = async () => {
     setIsSuggesting(true);
-    setIsSuggestionModalOpen(true); // Open modal immediately to show loading state
+    setIsSuggestionModalOpen(true); 
     setSuggestedBudgets(null);
-    // AI Service expects full expense objects, but for budgeting categories and amounts are enough.
-    // We might need to adapt suggestBudgets to accept stats format or just map it.
-    // Since getExpenseStats returns {category, amount, date}, we can map it to look like Expense.
+
     const mappedExpenses: any = expenses.map((e: any) => ({
         category: e.category,
         amount: e.amount,
@@ -87,7 +86,7 @@ export const BudgetSettings: React.FC<BudgetSettingsProps> = ({ localSettings, s
         setSuggestedBudgets(result);
     } else {
         useZustandStore.getState().addToast({ message: 'Failed to get AI suggestions.', type: 'error' });
-        setIsSuggestionModalOpen(false); // Close modal on error
+        setIsSuggestionModalOpen(false); 
     }
     setIsSuggesting(false);
   };

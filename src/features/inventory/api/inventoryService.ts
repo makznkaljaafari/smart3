@@ -490,7 +490,7 @@ export const inventoryService = {
             await journalService.saveJournalEntry({
                 date: new Date().toISOString().split('T')[0],
                 description: `Stock Adjustment for Product ${productId}`,
-                createdBy: user?.name,
+                createdBy: user?.name || '',
                 referenceType: 'adjustment',
                 lines: lines.map(l => ({ ...l, id: crypto.randomUUID() }))
             });
