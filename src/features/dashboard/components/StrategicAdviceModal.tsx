@@ -1,0 +1,114 @@
+
+import React from 'react';
+import { useDraggableAndResizable } from '../../../hooks/useDraggableAndResizable';
+import { HoloButton } from '../../../components/ui/HoloButton';
+import { X, Lightbulb, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
+import { useZustandStore } from '../../../store/useStore';
+import { translations } from '../../../lib/i18n';
+
+interface StrategicAdviceModalProps {
+  adviceData: { advice: string[], priority: 'high' | 'medium' | 'low' } | null;
+  onClose: () => void;
+  isLoading: boolean;
+}
+
+export const StrategicAdviceModal: React.FC<StrategicAdviceModalProps> = ({ adviceData, onClose, isLoading }) => {
+  const { theme, lang } = useZustandStore();
+  const t = translations[lang];
+  const { modalRef, headerRef, position, size, handleDragStart } = useDraggableAndResizable({
+    initialSize: { width: 600, height: 500 }
+  });
+  const isDark = theme === 'dark';
+
+  const getPriorityColor = (priority: string) => {
+      switch(priority) {
+          case 'high': return 'text-red-400 border-red-500/30 bg-red-500/10';
+          case 'medium': return 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10';
+          case 'low': return 'text-green-400 border-green-500/30 bg-green-500/10';
+          default: return 'text-blue-400';
+      }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/75 z-[60]" onMouseDown={onClose}>
+      <div
+        ref={modalRef}
+        style={{ ...position, ...size }}
+        className={`fixed rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.6)] flex flex-col overflow-hidden border-2 ${isDark ? 'bg-gray-900 border-purple-500/40' : 'bg-white border-purple-200'}`}
+        onMouseDown={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div 
+          ref={headerRef} 
+          onMouseDown={handleDragStart}
+          className={`p-6 border-b flex items-center justify-between cursor-move ${isDark ? 'border-gray-700 bg-gray-800/50' : 'border-slate-100 bg-slate-50'}`}
+        >
+          <h3 className="text-xl font-bold flex items-center gap-2">
+            <Lightbulb className="text-yellow-400" />
+            {lang === 'ar' ? 'المستشار الاستراتيجي' : 'Strategic Advisor'}
+          </h3>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-500/20"><X size={20} /></button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 p-8 overflow-y-auto">
+            {isLoading ? (
+                <div className="flex flex-col items-center justify-center h-full gap-6">
+                    <div className="relative">
+                        <div className="w-16 h-16 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin"></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <BrainIcon className="w-8 h-8 text-purple-400 animate-pulse" />
+                        </div>
+                    </div>
+                    <p className="text-gray-400 animate-pulse text-lg">
+                        {lang === 'ar' ? 'جاري تحليل البيانات المالية...' : 'Analyzing financial data...'}
+                    </p>
+                </div>
+            ) : adviceData ? (
+                <div className="space-y-6">
+                    <div className={`p-4 rounded-xl border flex items-center gap-4 ${getPriorityColor(adviceData.priority)}`}>
+                        <AlertTriangle size={24} />
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-wider opacity-70">
+                                {lang === 'ar' ? 'أولوية التنفيذ' : 'Priority Level'}
+                            </p>
+                            <p className="text-lg font-bold capitalize">{adviceData.priority}</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        {adviceData.advice.map((tip, index) => (
+                            <div key={index} className={`p-4 rounded-xl border flex gap-4 transition-all hover:translate-x-1 ${isDark ? 'bg-gray-800/40 border-gray-700 hover:bg-gray-800' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-bold ${isDark ? 'bg-gray-700 text-cyan-400' : 'bg-white text-cyan-600 shadow-sm'}`}>
+                                    {index + 1}
+                                </div>
+                                <p className="leading-relaxed text-sm md:text-base">{tip}</p>
+                            </div>
+                        ))}
+                    </div>
+                    
+                    <div className="pt-4 border-t border-dashed border-gray-700 text-xs text-gray-500 text-center">
+                        {lang === 'ar' ? 'تم الإنشاء بواسطة Gemini AI بناءً على التدفق النقدي والديون والمخزون.' : 'Generated by Gemini AI based on cash flow, debts, and inventory.'}
+                    </div>
+                </div>
+            ) : (
+                <div className="text-center text-gray-500">
+                    <p>{lang === 'ar' ? 'فشل في توليد النصائح.' : 'Failed to generate advice.'}</p>
+                </div>
+            )}
+        </div>
+        
+        <div className={`p-4 border-t flex justify-end ${isDark ? 'border-gray-700 bg-gray-900' : 'border-slate-200 bg-white'}`}>
+             <HoloButton variant="primary" onClick={onClose}>{t.close}</HoloButton>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const BrainIcon = ({ className }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z" />
+        <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z" />
+    </svg>
+);

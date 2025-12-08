@@ -1,0 +1,1 @@
+export * from '../../features/accounting/api/journalService';

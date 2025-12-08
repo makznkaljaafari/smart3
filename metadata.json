@@ -1,0 +1,8 @@
+{
+  "name": "Copy of Copy of 27AI Dashboard",
+  "description": "A futuristic, AI-powered dashboard for managing personal or small business finances. This project has been refactored to a clean, modern structure. It helps track debts, expenses, and customers with multi-currency and multi-language support, and features integration capabilities for notifications.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
