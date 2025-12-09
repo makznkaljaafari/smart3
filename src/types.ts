@@ -91,7 +91,7 @@ export type AppState = {
   authLoading: boolean;
   
   // UI State
-  theme: AppTheme;
+  theme: AppTheme; // Strictly typed now
   lang: LangCode;
   currency: CurrencyCode;
   sidebarWidth: number;
