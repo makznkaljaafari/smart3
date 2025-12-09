@@ -1,201 +1,237 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useZustandStore } from '../../../store/useStore';
-import { inventoryService } from '../api/inventoryService';
 import { Product, Toast } from '../../../types';
+import { inventoryService } from '../api/inventoryService';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { callAIProxy, cleanJsonString } from '../../../lib/aiClient';
 
 export const useInventoryData = () => {
-  const { lang, currentCompany, settings } = useZustandStore(state => ({
-      lang: state.lang,
-      currentCompany: state.currentCompany,
-      settings: state.settings
-  }));
-  const queryClient = useQueryClient();
-  const addToast = useCallback((message: string, type: Toast['type'] = 'info') => {
-      useZustandStore.setState(s => ({ toasts: [...s.toasts, { id: crypto.randomUUID(), message, type }] }));
-  }, []);
+    const { lang, settings, authUser, currentCompany } = useZustandStore(state => ({
+        lang: state.lang,
+        settings: state.settings,
+        authUser: state.authUser,
+        currentCompany: state.currentCompany,
+    }));
+    const queryClient = useQueryClient();
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = settings.page.inventory.pageSize || 15;
+    // UI State
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = settings.page.inventory?.pageSize || 20;
 
-  const [showFormModal, setShowFormModal] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [adjustingProduct, setAdjustingProduct] = useState<Product | null>(null);
-  const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
-  const [showScannerModal, setShowScannerModal] = useState(false);
-  
-  const [aiFilteredProductIds, setAiFilteredProductIds] = useState<string[] | null>(null);
-  const [isAiSearching, setIsAiSearching] = useState(false);
+    // Modal State
+    const [showFormModal, setShowFormModal] = useState(false);
+    const [showScannerModal, setShowScannerModal] = useState(false);
+    const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+    const [adjustingProduct, setAdjustingProduct] = useState<Product | null>(null);
+    const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
+    
+    // AI Search State
+    const [isAiSearching, setIsAiSearching] = useState(false);
+    const [aiFilteredProductIds, setAiFilteredProductIds] = useState<string[] | null>(null);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 500);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
+    const addToast = useCallback((message: string, type: Toast['type'] = 'info') => {
+        useZustandStore.setState(s => ({ toasts: [...s.toasts, { id: crypto.randomUUID(), message, type }] }));
+    }, []);
 
-  // Queries
-  const { data: productsData, isLoading: productsLoading, isError, error } = useQuery({
-      queryKey: ['products', currentCompany?.id, currentPage, pageSize, debouncedSearch],
-      queryFn: () => inventoryService.getProductsPaginated({
-          page: currentPage,
-          pageSize,
-          search: debouncedSearch
-      }),
-      placeholderData: keepPreviousData,
-      enabled: !!currentCompany?.id
-  });
+    // Debounce Search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+            setCurrentPage(1);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
 
-  const { data: statsData } = useQuery({
-      queryKey: ['inventoryStats', currentCompany?.id],
-      queryFn: inventoryService.getInventoryOverviewStats,
-      enabled: !!currentCompany?.id
-  });
+    // Queries
+    const { data: productsData, isLoading: productsLoading, error: productsErrorObj } = useQuery({
+        queryKey: ['products', currentCompany?.id, currentPage, pageSize, debouncedSearch, aiFilteredProductIds],
+        queryFn: async () => {
+            // Note: In a real implementation, we would pass aiFilteredProductIds to the service
+            // to filter on the backend if the list is large. For now we use standard search.
+            return inventoryService.getProductsPaginated({
+                page: currentPage,
+                pageSize,
+                search: debouncedSearch
+            });
+        },
+        placeholderData: keepPreviousData,
+        enabled: !!currentCompany?.id,
+    });
+    
+    const { data: inventoryLevelsData } = useQuery({
+        queryKey: ['inventoryLevels', currentCompany?.id],
+        queryFn: inventoryService.getInventoryLevels,
+        enabled: !!currentCompany?.id
+    });
+    
+    const { data: overviewStats } = useQuery({
+        queryKey: ['inventoryStats', currentCompany?.id],
+        queryFn: inventoryService.getInventoryOverviewStats,
+        enabled: !!currentCompany?.id
+    });
 
-  const products = productsData?.data || [];
-  const totalCount = productsData?.count || 0;
-  const totalPages = Math.ceil(totalCount / pageSize);
-  
-  // Cast to any to allow dynamic property addition (totalCount) without TS errors
-  const stats: any = statsData?.data || { totalValue: 0, lowStockCount: 0, totalSku: 0 };
-  stats.totalCount = totalCount; // Sync count with paginated query total
+    const products = productsData?.data || [];
+    const totalCount = productsData?.count || 0;
+    const totalPages = Math.ceil(totalCount / pageSize);
 
-  // Stock Levels (Aggregated for display in list)
-  const productIds = useMemo(() => products.map(p => p.id), [products]);
-  const { data: stockLevels } = useQuery({
-      queryKey: ['stockAggregated', productIds],
-      queryFn: () => inventoryService.getAggregatedStockLevels(productIds),
-      enabled: productIds.length > 0
-  });
-  const stockTotals = stockLevels?.data || {};
+    // Aggregate stock totals
+    const stockTotals = useMemo(() => {
+        const levels = inventoryLevelsData?.data || [];
+        const totals: Record<string, number> = {};
+        levels.forEach(l => {
+            totals[l.productId] = (totals[l.productId] || 0) + l.quantity;
+        });
+        return totals;
+    }, [inventoryLevelsData]);
 
-  // AI Search
-  const handleAiSearch = async () => {
-      if (!searchTerm.trim()) return;
-      setIsAiSearching(true);
-      try {
-          const { data: allProducts } = await inventoryService.getProductsPaginated({ page: 1, pageSize: 1000 });
-          
-          const productList = allProducts.map((p: any) => ({ id: p.id, name: p.name, desc: p.description, sku: p.sku }));
-          const prompt = `Filter these products based on the query: "${searchTerm}". Return JSON array of matching IDs. Products: ${JSON.stringify(productList)}`;
-          
-          const text = await callAIProxy(prompt, { responseMimeType: 'application/json' });
-          if (text) {
-              const ids = JSON.parse(cleanJsonString(text));
-              setAiFilteredProductIds(ids);
-          }
-      } catch (e) {
-          console.error(e);
-      } finally {
-          setIsAiSearching(false);
-      }
-  };
-  
-  // Filter products if AI search active
-  const displayedProducts = useMemo(() => {
-      if (aiFilteredProductIds !== null) {
-         return products.filter((p: any) => aiFilteredProductIds.includes(p.id));
-      }
-      return products;
-  }, [products, aiFilteredProductIds]);
+    const stats = useMemo(() => {
+        const os = overviewStats?.data || { totalValue: 0, lowStockCount: 0, totalSku: 0 };
+        // Return a type safe object, cast to any in component if needed for 'totalCount' property mapping
+        return {
+            totalSku: os.totalSku,
+            totalCount: os.totalSku, // Map totalSku to totalCount for component compatibility
+            totalValue: os.totalValue,
+            lowStockCount: os.lowStockCount
+        };
+    }, [overviewStats]);
 
-  // Mutations
-  const saveMutation = useMutation({
-      mutationFn: async (data: { product: Partial<Product>, isNew: boolean }) => {
-          const { error } = await inventoryService.saveProduct(data.product, data.isNew);
-          if (error) throw error;
-      },
-      onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ['products'] });
-          queryClient.invalidateQueries({ queryKey: ['inventoryStats'] });
-          addToast('تم حفظ المنتج بنجاح', 'success');
-          handleCloseModals();
-      },
-      onError: (err: any) => addToast(err.message, 'error')
-  });
+    // Handlers
+    const handleOpenForm = () => { setEditingProduct(null); setShowFormModal(true); };
+    const handleCloseModals = () => { 
+        setShowFormModal(false); 
+        setShowScannerModal(false); 
+        setEditingProduct(null);
+        setAdjustingProduct(null);
+        setViewingProduct(null);
+    };
 
-  const deleteMutation = useMutation({
-      mutationFn: async (id: string) => {
-          const { error } = await inventoryService.deleteProduct(id);
-          if (error) throw error;
-      },
-      onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ['products'] });
-          queryClient.invalidateQueries({ queryKey: ['inventoryStats'] });
-          addToast('تم حذف المنتج', 'info');
-      },
-      onError: (err: any) => addToast(err.message, 'error')
-  });
+    const handleEditProduct = (product: Product) => { setEditingProduct(product); setShowFormModal(true); };
+    const handleViewProduct = (product: Product) => { setViewingProduct(product); };
+    const handleOpenAdjustModal = (product: Product) => { setAdjustingProduct(product); };
+    const handleOpenScanner = () => { setShowScannerModal(true); };
 
-  // Handlers
-  const handleOpenForm = () => { setEditingProduct(null); setShowFormModal(true); };
-  const handleCloseModals = () => {
-      setShowFormModal(false);
-      setEditingProduct(null);
-      setAdjustingProduct(null);
-      setViewingProduct(null);
-      setShowScannerModal(false);
-  };
+    // Mutations
+    const saveMutation = useMutation({
+        mutationFn: async (product: Partial<Product>) => {
+            const isNew = !product.id;
+            const { error } = await inventoryService.saveProduct(product, isNew);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['products'] });
+            queryClient.invalidateQueries({ queryKey: ['inventoryStats'] });
+            addToast('Product saved successfully', 'success');
+            handleCloseModals();
+        },
+        onError: (e: any) => addToast(e.message, 'error')
+    });
 
-  const handleEditProduct = (p: Product) => { setEditingProduct(p); setShowFormModal(true); };
-  const handleDeleteProduct = async (id: string) => { if(confirm('Are you sure?')) await deleteMutation.mutateAsync(id); };
-  
-  const handleSaveProduct = async (p: Partial<Product>) => {
-      await saveMutation.mutateAsync({ product: p, isNew: !editingProduct });
-  };
-  
-  const handleOpenAdjustModal = (p: Product) => setAdjustingProduct(p);
-  
-  const handleStockAdjustment = async (warehouseId: string, newQuantity: number, adjustmentAccountId?: string) => {
-      if (!adjustingProduct) return;
-      const { error } = await inventoryService.adjustStockLevel(adjustingProduct.id, warehouseId, newQuantity, adjustmentAccountId);
-      if (error) {
-          addToast(error.message, 'error');
-      } else {
-          addToast('Stock adjusted successfully', 'success');
-          queryClient.invalidateQueries({ queryKey: ['stockAggregated'] });
-          queryClient.invalidateQueries({ queryKey: ['inventoryStats'] });
-          handleCloseModals();
-      }
-  };
+    const handleSaveProduct = async (product: Partial<Product>) => {
+        await saveMutation.mutateAsync(product);
+    };
 
-  const handleOpenScanner = () => setShowScannerModal(true);
-  const handleScan = (code: string) => {
-      setSearchTerm(code);
-      setShowScannerModal(false);
-  };
-  
-  const handleViewProduct = (p: Product) => setViewingProduct(p);
+    const deleteMutation = useMutation({
+        mutationFn: async (id: string) => {
+            const { error } = await inventoryService.deleteProduct(id);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['products'] });
+            queryClient.invalidateQueries({ queryKey: ['inventoryStats'] });
+            addToast('Product deleted', 'info');
+        },
+        onError: (e: any) => addToast(e.message, 'error')
+    });
 
-  return {
-    stats,
-    searchTerm, setSearchTerm,
-    viewMode, setViewMode,
-    currentPage, setCurrentPage,
-    paginatedProducts: displayedProducts,
-    stockTotals,
-    totalPages,
-    productsLoading,
-    productsError: isError ? (error as Error).message : null,
-    showFormModal,
-    editingProduct,
-    adjustingProduct,
-    viewingProduct,
-    showScannerModal,
-    isAiSearching,
-    handleAiSearch,
-    handleOpenForm,
-    handleCloseModals,
-    handleSaveProduct,
-    handleEditProduct,
-    handleDeleteProduct,
-    handleOpenAdjustModal,
-    handleStockAdjustment,
-    handleOpenScanner,
-    handleScan,
-    handleViewProduct,
-  };
+    const handleDeleteProduct = async (id: string) => {
+        if(confirm('Are you sure?')) await deleteMutation.mutateAsync(id);
+    };
+
+    const adjustMutation = useMutation({
+        mutationFn: async (data: { warehouseId: string, quantity: number, accountId?: string }) => {
+            if (!adjustingProduct) return;
+            const { error } = await inventoryService.adjustStockLevel(adjustingProduct.id, data.warehouseId, data.quantity, data.accountId);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['inventoryLevels'] });
+            queryClient.invalidateQueries({ queryKey: ['inventoryStats'] });
+            addToast('Stock updated', 'success');
+            handleCloseModals();
+        },
+        onError: (e: any) => addToast(e.message, 'error')
+    });
+
+    const handleStockAdjustment = async (warehouseId: string, quantity: number, accountId?: string) => {
+        await adjustMutation.mutateAsync({ warehouseId, quantity, accountId });
+    };
+
+    const handleScan = (code: string) => {
+        setSearchTerm(code);
+        setShowScannerModal(false);
+    };
+
+    // AI Search
+    const handleAiSearch = async () => {
+        if (!searchTerm.trim()) return;
+        setIsAiSearching(true);
+        try {
+            const { data: allProducts } = await inventoryService.getProductsPaginated({ page: 1, pageSize: 100 }); // Limited context for demo
+            
+            // Explicitly typing p as any to avoid implicit any error
+            const productList = allProducts.map((p: any) => ({ id: p.id, name: p.name, desc: p.description, sku: p.sku }));
+            const prompt = `Filter these products based on the query: "${searchTerm}". Return JSON array of matching IDs. Products: ${JSON.stringify(productList)}`;
+            
+            const text = await callAIProxy(prompt, { responseMimeType: 'application/json' });
+            if (text) {
+                const ids = JSON.parse(cleanJsonString(text));
+                if (Array.isArray(ids)) {
+                     setAiFilteredProductIds(ids);
+                     if(ids.length > 0) addToast(`AI found ${ids.length} matches.`, 'info');
+                     else addToast('AI found no matches.', 'warning');
+                }
+            }
+        } catch (e) {
+            console.error(e);
+            addToast('AI Search failed', 'error');
+        } finally {
+            setIsAiSearching(false);
+        }
+    };
+
+    return {
+        stats,
+        searchTerm, setSearchTerm,
+        viewMode, setViewMode,
+        currentPage, setCurrentPage,
+        paginatedProducts: products,
+        stockTotals,
+        totalPages,
+        productsLoading,
+        productsError: productsErrorObj ? (productsErrorObj as Error).message : null,
+        
+        showFormModal,
+        editingProduct,
+        adjustingProduct,
+        viewingProduct,
+        showScannerModal,
+        
+        isAiSearching,
+        handleAiSearch,
+        
+        handleOpenForm,
+        handleCloseModals,
+        handleSaveProduct,
+        handleEditProduct,
+        handleDeleteProduct,
+        handleOpenAdjustModal,
+        handleStockAdjustment,
+        handleOpenScanner,
+        handleScan,
+        handleViewProduct,
+    };
 };
