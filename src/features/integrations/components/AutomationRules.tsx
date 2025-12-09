@@ -1,11 +1,11 @@
+
 import React, { useState } from 'react';
 import { useZustandStore } from '../../../store/useStore';
 import { translations } from '../../../lib/i18n';
 import { Toggle } from '../../../components/ui/Toggle';
 import { HoloButton } from '../../../components/ui/HoloButton';
-import { ScheduledReport, SettingsState } from '../../../types';
-import { AlertTriangle, Calendar, Plus, Trash2, Save } from 'lucide-react';
-import { profileService } from '../../../services/profileService';
+import { ScheduledReport, SettingsState, AppTheme } from '../../../types';
+import { Plus, Trash2 } from 'lucide-react';
 
 const reportTypeLabels: Record<ScheduledReport['reportType'], string> = {
   expenseSummary: 'ملخص المصروفات',
@@ -17,11 +17,12 @@ interface AutomationRulesProps {
   localSettings: SettingsState;
   setLocalSettings: React.Dispatch<React.SetStateAction<SettingsState>>;
   t: Record<string, string>;
-  theme: 'light' | 'dark';
+  theme: AppTheme;
   lang: 'ar' | 'en';
 }
 
 export const AutomationRules: React.FC<AutomationRulesProps> = ({ localSettings, setLocalSettings, t, theme, lang }) => {
+    const isDark = theme.startsWith('dark');
     const [newSchedule, setNewSchedule] = useState({
         reportType: 'expenseSummary' as ScheduledReport['reportType'],
         frequency: 'weekly' as ScheduledReport['frequency'],
@@ -46,18 +47,18 @@ export const AutomationRules: React.FC<AutomationRulesProps> = ({ localSettings,
         }));
     };
 
-    const formControlClasses = `w-full rounded-lg p-2 border focus:outline-none transition-colors focus:ring-2 focus:ring-cyan-500 ${theme === 'dark' ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-slate-800 border-slate-300'}`;
+    const formControlClasses = `w-full rounded-lg p-2 border focus:outline-none transition-colors focus:ring-2 focus:ring-cyan-500 ${isDark ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-slate-800 border-slate-300'}`;
 
     return (
-        <div className={`p-6 rounded-2xl border ${theme === 'dark' ? 'bg-slate-900 border-gray-700' : 'bg-white border-slate-200'}`}>
+        <div className={`p-6 rounded-2xl border ${isDark ? 'bg-slate-900 border-gray-700' : 'bg-white border-slate-200'}`}>
             <div className="space-y-8">
                 <div>
                     <h3 className="font-semibold mb-2 text-lg">{t.smartAlerts}</h3>
-                    <p className={`text-xs mb-4 ${theme === 'dark' ? 'text-gray-400' : 'text-slate-500'}`}>{t.manageSmartAlerts}</p>
-                    <div className={`p-4 rounded-lg flex flex-wrap items-center justify-between ${theme === 'dark' ? 'bg-gray-800/50' : 'bg-slate-100'}`}>
+                    <p className={`text-xs mb-4 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>{t.manageSmartAlerts}</p>
+                    <div className={`p-4 rounded-lg flex flex-wrap items-center justify-between ${isDark ? 'bg-gray-800/50' : 'bg-slate-100'}`}>
                         <div className="flex-1 min-w-[250px]">
                             <p className="font-medium">{t.overdueDebtAlert}</p>
-                            <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-slate-500'}`}>{t.notifyWhenDebtIsOverdueBy}
+                            <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>{t.notifyWhenDebtIsOverdueBy}
                                 <input 
                                 type="number" 
                                 value={localSettings.smartAlerts.overdueDebt.days} 
@@ -74,12 +75,12 @@ export const AutomationRules: React.FC<AutomationRulesProps> = ({ localSettings,
                     </div>
                 </div>
 
-                <div className={`mt-6 pt-6 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-slate-200'}`}>
+                <div className={`mt-6 pt-6 border-t ${isDark ? 'border-gray-700' : 'border-slate-200'}`}>
                     <h3 className="font-semibold mb-2 text-lg">{t.scheduledReports}</h3>
-                    <p className={`text-xs mb-4 ${theme === 'dark' ? 'text-gray-400' : 'text-slate-500'}`}>{t.manageScheduledReports}</p>
+                    <p className={`text-xs mb-4 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>{t.manageScheduledReports}</p>
                     <div className="space-y-2">
                         {(localSettings.scheduledReports || []).map(schedule => (
-                            <div key={schedule.id} className={`p-3 rounded-lg flex items-center justify-between ${theme === 'dark' ? 'bg-gray-800/50' : 'bg-slate-100'}`}>
+                            <div key={schedule.id} className={`p-3 rounded-lg flex items-center justify-between ${isDark ? 'bg-gray-800/50' : 'bg-slate-100'}`}>
                                 <div>
                                 <p className="font-medium">{reportTypeLabels[schedule.reportType]}</p>
                                 <p className="text-xs text-gray-400">{t[schedule.frequency]} to {schedule.channels.join(', ')}</p>
@@ -88,7 +89,7 @@ export const AutomationRules: React.FC<AutomationRulesProps> = ({ localSettings,
                             </div>
                         ))}
                     </div>
-                    <div className={`mt-4 pt-4 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-slate-200'}`}>
+                    <div className={`mt-4 pt-4 border-t ${isDark ? 'border-gray-700' : 'border-slate-200'}`}>
                         <h4 className="font-semibold text-sm mb-2">{t.addSchedule}</h4>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <select value={newSchedule.reportType} onChange={e => setNewSchedule(p => ({...p, reportType: e.target.value as any}))} className={formControlClasses}>

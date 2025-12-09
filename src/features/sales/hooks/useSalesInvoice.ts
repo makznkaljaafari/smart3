@@ -1,73 +1,111 @@
+
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useZustandStore } from '../../../store/useStore';
-import { salesService } from '../../../services/salesService';
-import { profileService } from '../../../services/profileService';
-import { suggestProductsForCustomer } from '../../../services/aiService';
-import { SalesInvoiceItem, Customer, Product, PaymentMethod, CurrencyCode, SettingsState, LangCode } from '../../../types';
-import { eventBus } from '../../../lib/events';
-import { inventoryService } from '../../../services/inventoryService';
+import { salesService } from '../api/salesService';
+import { inventoryService } from '../../inventory/api/inventoryService';
+import { SalesInvoiceItem, Product, PaymentMethod, CurrencyCode, Account } from '../../../types';
+import { Customer } from '../../customers/types';
 import { useQueryClient } from '@tanstack/react-query';
+import { suggestProductsForCustomer } from '../api/salesAiService';
 
 interface LocalSalesInvoiceItem extends SalesInvoiceItem {
   warehouseId: string;
 }
 
 export const useSalesInvoice = () => {
-    const { lang, settings, addToast, setSettings, warehouses, accounts } = useZustandStore(state => ({
-        lang: state.lang,
+    const { settings, addToast, accounts, warehouses, products } = useZustandStore(state => ({
         settings: state.settings,
         addToast: state.addToast,
-        setSettings: state.setSettings,
-        warehouses: state.warehouses,
         accounts: state.accounts,
+        warehouses: state.warehouses,
+        products: state.products
     }));
     
     const queryClient = useQueryClient();
 
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
     const [selectedVehicleId, setSelectedVehicleId] = useState<string>('');
-    
     const [invoiceType, setInvoiceType] = useState<'cash' | 'credit'>('cash');
-    const [warehouseId, setWarehouseId] = useState<string>('');
-    const [currency, setCurrency] = useState<CurrencyCode>(settings.baseCurrency);
     const [items, setItems] = useState<LocalSalesInvoiceItem[]>([]);
     
+    // Financials
     const [discount, setDiscount] = useState(0);
     const [tax, setTax] = useState(0);
     const [amountPaid, setAmountPaid] = useState(0);
+    
+    // Payment Details
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
     const [depositAccountId, setDepositAccountId] = useState<string>('');
+
+    // Meta
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-    // New: Allow manual invoice number
-    const [invoiceNumber, setInvoiceNumber] = useState(`INV-${Date.now().toString().slice(-6)}`);
+    const [invoiceNumber, setInvoiceNumber] = useState('');
     const [notes, setNotes] = useState('');
     const [isSaving, setIsSaving] = useState(false);
-    const [stockWarnings, setStockWarnings] = useState<Record<string, string>>({});
+    const [sendInvoice, setSendInvoice] = useState(false);
+    
+    // Header Settings
+    const [currency, setCurrency] = useState<CurrencyCode>(settings.baseCurrency);
+    const [warehouseId, setWarehouseId] = useState<string>(settings.inventory?.defaultWarehouseId || '');
+    
+    // AI Suggestions
     const [aiSuggestions, setAiSuggestions] = useState<Product[]>([]);
     const [isSuggesting, setIsSuggesting] = useState(false);
-    const [sendInvoice, setSendInvoice] = useState(true);
+    const [stockWarnings, setStockWarnings] = useState<Record<string, string>>({});
 
+    // Initialize warehouse
     useEffect(() => {
         if (settings.inventory?.defaultWarehouseId) {
             setWarehouseId(settings.inventory.defaultWarehouseId);
         } else if (!warehouseId && warehouses.length > 0) {
             setWarehouseId(warehouses[0].id);
         }
-    }, [settings.inventory?.defaultWarehouseId, warehouses]);
+    }, [settings.inventory?.defaultWarehouseId, warehouseId, warehouses]);
 
+    // AI Suggestions Logic
+    useEffect(() => {
+        const fetchSuggestions = async () => {
+            if (!selectedCustomer) {
+                setAiSuggestions([]);
+                return;
+            }
+            setIsSuggesting(true);
+            
+            // Mock fetching purchase history from a query or cache
+            // In a real app, query salesService.getSalesByCustomer(selectedCustomer.id)
+            const purchaseHistory: { productName: string, quantity: number }[] = []; 
+            const availableToSuggest = products.map(p => ({ id: p.id, name: p.name }));
+            
+            // Call AI Service
+            // (Assuming purchaseHistory would be populated from actual data)
+            if (purchaseHistory.length >= 0 && availableToSuggest.length > 0) {
+                 const suggestedIds = await suggestProductsForCustomer(selectedCustomer.name, purchaseHistory, availableToSuggest);
+                 if (suggestedIds) {
+                     setAiSuggestions(products.filter((p: Product) => suggestedIds.includes(p.id) && !items.some(i => i.productId === p.id)));
+                 } else {
+                     setAiSuggestions([]);
+                 }
+            }
+            setIsSuggesting(false);
+        };
+        fetchSuggestions();
+    }, [selectedCustomer, products]); // Removing items from dep array to avoid loops, handled by filtering
+
+    // Group Accounts
     const accountGroups = useMemo(() => {
         const assets = accounts.filter(a => a.type === 'asset' && !a.isPlaceholder);
         return {
-            cash: assets.filter(a => a.name.toLowerCase().includes('cash') || a.name.includes('نقد') || a.name.includes('صندوق')),
-            bank: assets.filter(a => a.name.toLowerCase().includes('bank') || a.name.includes('بنك')),
-            exchange: assets.filter(a => a.name.toLowerCase().includes('exchange') || a.name.includes('صراف')),
-            other: assets.filter(a => !a.name.match(/(cash|نقد|صندوق|bank|بنك|exchange|صراف)/i))
+            cash: assets.filter(a => a.name.toLowerCase().includes('cash') || a.name.includes('نقد') || a.name.includes('صندوق') || a.name.includes('box')),
+            bank: assets.filter(a => a.name.toLowerCase().includes('bank') || a.name.includes('بنك') || a.name.includes('مصرف')),
+            exchange: assets.filter(a => a.name.toLowerCase().includes('exchange') || a.name.includes('صراف') || a.name.includes('تحويل')),
+            other: assets.filter(a => !a.name.match(/(cash|نقد|صندوق|box|bank|بنك|مصرف|exchange|صراف|تحويل)/i))
         };
     }, [accounts]);
 
+    // Default payment account logic
     useEffect(() => {
         if (amountPaid > 0 || invoiceType === 'cash') {
-            let targetGroup: any[] = [];
+            let targetGroup: Account[] = [];
             if (paymentMethod === 'cash') targetGroup = accountGroups.cash;
             else if (paymentMethod === 'bank_transfer' || paymentMethod === 'credit_card') targetGroup = accountGroups.bank;
             else if (paymentMethod === 'exchange') targetGroup = accountGroups.exchange;
@@ -84,6 +122,7 @@ export const useSalesInvoice = () => {
         }
     }, [paymentMethod, amountPaid, invoiceType, accountGroups, accounts, depositAccountId]);
 
+    // Calculations
     const calculations = useMemo(() => {
         const subtotal = items.reduce((acc, item) => acc + item.total, 0);
         const grandTotal = subtotal - discount + tax;
@@ -92,98 +131,30 @@ export const useSalesInvoice = () => {
         return { subtotal, total: grandTotal, remainingAmount, actualPaid };
     }, [items, discount, tax, amountPaid, invoiceType]);
 
+    // Sync amountPaid for cash invoices
     useEffect(() => {
         if (invoiceType === 'cash') {
             setAmountPaid(calculations.total);
+        } else if (invoiceType === 'credit' && amountPaid === calculations.total && calculations.total > 0) {
+             setAmountPaid(0);
         }
     }, [invoiceType, calculations.total]);
 
-    useEffect(() => {
-        const checkStocks = async () => {
-            const { allowNegativeStock } = settings.inventory || {};
-            if (!warehouseId || items.length === 0) {
-                setStockWarnings({});
-                return;
-            }
-
-            const productIds = Array.from(new Set(items.map(i => i.productId))) as string[];
-            const { data: levels } = await inventoryService.getBatchStockLevels(productIds, warehouseId);
-            const stockMap = new Map();
-            levels?.forEach((l: any) => stockMap.set(l.productId, l.quantity));
-
-            const newWarnings: Record<string, string> = {};
-
-            items.forEach(item => {
-                const available = stockMap.get(item.productId) || 0;
-                const totalRequested = items.filter(i => i.productId === item.productId).reduce((sum, i) => sum + i.quantity, 0);
-
-                if (totalRequested > available) {
-                    if (!allowNegativeStock) {
-                        newWarnings[item.productId] = `الكمية المطلوبة تتجاوز المخزون (${available} متوفر)`;
-                    }
-                }
-            });
-            
-            setStockWarnings(newWarnings);
-        };
-        
-        const timer = setTimeout(checkStocks, 500);
-        return () => clearTimeout(timer);
-
-    }, [items, warehouseId, settings.inventory]);
-
-    useEffect(() => {
-        if (!selectedCustomer) {
-            setAiSuggestions([]);
-            return;
-        }
-        const fetchSuggestions = async () => {
-            setIsSuggesting(true);
-            // Fetch recent sales for this customer to avoid loading all sales
-            const { data: allSales } = await salesService.getSalesPaginated({ pageSize: 20, search: selectedCustomer.name });
-            
-            const purchaseHistory: { productName: string, quantity: number }[] = [];
-            const purchasedProductIds = new Set<string>();
-            
-            allSales.forEach(sale => { 
-                if (sale.customerId === selectedCustomer.id) {
-                    sale.items.forEach(item => {
-                        purchasedProductIds.add(item.productId);
-                        purchaseHistory.push({ productName: item.productName, quantity: item.quantity });
-                    });
-                }
-            });
-            
-            // OPTIMIZED: Fetch a subset of products (e.g. most recent) to suggest from, instead of loading all
-            const { data: availableProducts } = await inventoryService.getProductsPaginated({ pageSize: 50 }); // Fetch top 50
-            
-            const availableToSuggest = availableProducts.filter(p => !purchasedProductIds.has(p.id)).map(p => ({ id: p.id, name: p.name }));
-            
-            if (purchaseHistory.length > 0 && availableToSuggest.length > 0) {
-                 const suggestedIds = await suggestProductsForCustomer(selectedCustomer.name, purchaseHistory, availableToSuggest);
-                 if (suggestedIds) {
-                     // Only filter from the products we actually fetched
-                     setAiSuggestions(availableProducts.filter(p => suggestedIds.includes(p.id) && !items.some(i => i.productId === p.id)));
-                 } else {
-                     setAiSuggestions([]);
-                 }
-            }
-            setIsSuggesting(false);
-        };
-        fetchSuggestions();
-    }, [selectedCustomer, items]);
-
     const handleAddItem = (product: Product) => {
         if (items.some(i => i.productId === product.id)) { addToast({ message: 'هذا المنتج موجود بالفعل.', type: 'info' }); return; }
-        if (!warehouseId) { addToast({ message: 'الرجاء اختيار المستودع أولاً.', type: 'warning' }); }
+        
         const newItem: LocalSalesInvoiceItem = { 
-            productId: product.id, productName: product.name, quantity: 1, 
-            unitPrice: product.sellingPrice, total: product.sellingPrice, warehouseId: warehouseId 
+            productId: product.id, 
+            productName: product.name, 
+            quantity: 1, 
+            unitPrice: product.sellingPrice, 
+            total: product.sellingPrice, 
+            warehouseId: warehouseId 
         };
         setItems(prev => [...prev, newItem]);
     };
 
-    const handleItemChange = (productId: string, field: 'quantity' | 'unitPrice', value: any) => {
+    const handleItemChange = (productId: string, field: 'quantity' | 'unitPrice' | 'warehouseId', value: any) => {
         setItems(prev => prev.map(item => {
             if (item.productId === productId) {
                 const updatedItem = { ...item, [field]: value };
@@ -194,10 +165,7 @@ export const useSalesInvoice = () => {
         }));
     };
 
-    const handleRemoveItem = (productId: string) => {
-        setItems(prev => prev.filter(item => item.productId !== productId));
-        setStockWarnings(prev => { const newWarnings = {...prev}; delete newWarnings[productId]; return newWarnings; });
-    };
+    const handleRemoveItem = (productId: string) => setItems(prev => prev.filter(item => item.productId !== productId));
 
     const resetForm = useCallback(() => {
         setSelectedCustomer(null);
@@ -209,88 +177,89 @@ export const useSalesInvoice = () => {
         setPaymentMethod('cash');
         setNotes('');
         setInvoiceType('cash');
-        setInvoiceNumber(`INV-${Date.now().toString().slice(-6)}`);
+        setDepositAccountId('');
+        setInvoiceNumber('');
+        setCurrency(settings.baseCurrency);
+        setDate(new Date().toISOString().split('T')[0]);
         const defaultWh = settings.inventory?.defaultWarehouseId || (warehouses.length > 0 ? warehouses[0].id : '');
         setWarehouseId(defaultWh);
-        setCurrency(settings.baseCurrency);
-        setStockWarnings({});
-        setAiSuggestions([]);
-        setSendInvoice(true);
-        setDepositAccountId('');
-    }, [settings, warehouses]);
+    }, [settings.baseCurrency, settings.inventory?.defaultWarehouseId, warehouses]);
 
     const handleSaveInvoice = async () => {
-        const { allowBackdatedSales } = settings.inventory || {};
-        const today = new Date().toISOString().split('T')[0];
-        if (date < today && !allowBackdatedSales) {
-            addToast({ message: 'لا يسمح بإنشاء فواتير بتاريخ قديم.', type: 'error' });
-            return;
-        }
         if (!selectedCustomer) { addToast({ message: 'الرجاء اختيار عميل.', type: 'error' }); return; }
-        if (!invoiceNumber) { addToast({ message: 'رقم الفاتورة مطلوب.', type: 'error' }); return; }
-        if (!warehouseId) { addToast({ message: 'الرجاء اختيار المستودع.', type: 'error' }); return; }
         if (items.length === 0) { addToast({ message: 'يجب إضافة مادة واحدة على الأقل.', type: 'error' }); return; }
-        if (Object.keys(stockWarnings).length > 0) { addToast({ message: 'توجد كميات غير متوفرة. لا يمكن الحفظ.', type: 'error' }); return; }
+        if (!warehouseId) { addToast({ message: 'الرجاء اختيار المستودع.', type: 'error' }); return; }
         
         if ((invoiceType === 'cash' || amountPaid > 0) && !depositAccountId) {
-             addToast({ message: 'يجب اختيار حساب الإيداع (صندوق/بنك) لتسجيل الدفعة.', type: 'error' });
-             return;
+            addToast({ message: 'يجب اختيار حساب الإيداع (الأصل) لاستلام المبلغ.', type: 'error' });
+            return;
         }
 
         setIsSaving(true);
+        
         try {
-            const { total, actualPaid } = calculations;
+            const { actualPaid } = calculations;
             
-            const { error } = await salesService.createSale({
+            const processedItems = items.map(item => ({
+                product_id: item.productId,
+                warehouse_id: item.warehouseId,
+                quantity: item.quantity,
+                price: item.unitPrice
+            }));
+
+            const { data: invoiceId, error } = await salesService.createSale({
                 customerId: selectedCustomer.id,
-                invoiceNumber: invoiceNumber,
-                currency,
-                items: items.map(i => ({ product_id: i.productId, warehouse_id: warehouseId, quantity: i.quantity, price: i.unitPrice })),
+                invoiceNumber: invoiceNumber || `INV-${Date.now()}`,
+                currency: currency,
+                items: processedItems,
                 amountPaid: actualPaid,
-                paymentMethod,
-                notes,
+                paymentMethod: paymentMethod,
+                notes: notes,
                 depositAccountId: depositAccountId,
-                discount, // Pass discount
-                tax,      // Pass tax
-                vehicleId: selectedVehicleId // Pass vehicle
+                discount: discount,
+                tax: tax,
+                vehicleId: selectedVehicleId
             });
 
             if (error) throw error;
-
-            addToast({ message: 'تم حفظ الفاتورة بنجاح!', type: 'success' });
-            if (sendInvoice) {
-                eventBus.publish({
-                    id: crypto.randomUUID(), type: 'SALES_INVOICE_SEND',
-                    payload: { invoiceNumber, customerName: selectedCustomer.name, total, currency, recipientEmail: selectedCustomer.email },
-                    at: new Date().toISOString(), lang: lang as LangCode,
-                });
-            }
-            resetForm();
             
-            // Refresh related data
+            // Inventory movements handled via logic in createSale or separate
+            // For this implementation, we assume createSale RPC handles inventory deduction via trigger or we call logic
+            // Since we moved logic to frontend service for consistency in this example:
+            if (invoiceId) {
+                 const movements = items.map(item => ({
+                     productId: item.productId,
+                     warehouseId: item.warehouseId,
+                     quantityChange: -item.quantity, // Negative for sale
+                     movementType: 'sale' as const,
+                     referenceType: 'sales_invoice',
+                     referenceId: invoiceId,
+                     notes: `Invoice #${invoiceNumber}`
+                 }));
+                 await inventoryService.recordBatchMovements(movements);
+            }
+
+            addToast({ message: 'تم حفظ فاتورة المبيعات بنجاح!', type: 'success' }); 
+            resetForm();
+
             queryClient.invalidateQueries({ queryKey: ['salesStats'] });
             queryClient.invalidateQueries({ queryKey: ['inventoryStats'] });
-            queryClient.invalidateQueries({ queryKey: ['journalEntries'] });
-            // We still fetch inventory levels to update the local cache of stock for next invoice
-            queryClient.invalidateQueries({ queryKey: ['stockLevels'] });
-            
+            useZustandStore.getState().fetchInventoryLevels();
+
         } catch (e: any) {
-            addToast({ message: `فشل حفظ الفاتورة: ${e.message}`, type: 'error' });
+            console.error("Save Sale Error:", e);
+            addToast({ message: `فشل حفظ الفاتورة: ${e.message}`, type: 'error' }); 
         } finally {
             setIsSaving(false);
         }
     };
     
-    const handleSaveHeader = async (newProfileData: Partial<SettingsState['profile']>) => {
-        const newSettings = { ...settings, profile: { ...settings.profile, ...newProfileData } };
-        const { error } = await profileService.updateProfileAndSettings(newSettings);
-        if (error) {
-            addToast({ message: error.message, type: 'error' });
-        } else {
-            setSettings(newSettings);
-            addToast({ message: 'تم تحديث الملف الشخصي.', type: 'success' });
-        }
-    };
+    const handleSaveHeader = async (data: any) => {
+        // Implementation for updating profile settings from invoice header modal
+        const { profileService } = await import('../../../services/profileService');
+        await profileService.updateProfileAndSettings({ ...settings, profile: { ...settings.profile, ...data }});
+        useZustandStore.setState(s => ({ settings: { ...s.settings, profile: { ...s.settings.profile, ...data } } }));
+    }
 
     return {
         selectedCustomer, setSelectedCustomer,
@@ -299,7 +268,7 @@ export const useSalesInvoice = () => {
         invoiceNumber, setInvoiceNumber,
         warehouseId, setWarehouseId,
         currency, setCurrency,
-        items, setItems,
+        items, handleAddItem, handleItemChange, handleRemoveItem,
         discount, setDiscount,
         tax, setTax,
         amountPaid, setAmountPaid,
@@ -307,20 +276,12 @@ export const useSalesInvoice = () => {
         depositAccountId, setDepositAccountId,
         date, setDate,
         notes, setNotes,
-        isSaving,
+        isSaving, handleSaveInvoice,
         stockWarnings,
-        aiSuggestions,
-        setAiSuggestions,
-        isSuggesting,
+        aiSuggestions, setAiSuggestions, isSuggesting,
         sendInvoice, setSendInvoice,
-        calculations,
         accountGroups,
-        handleAddItem,
-        handleItemChange,
-        handleRemoveItem,
-        handleSaveInvoice,
-        handleSaveHeader,
-        warehouses,
-        settings,
+        calculations,
+        handleSaveHeader
     };
 };

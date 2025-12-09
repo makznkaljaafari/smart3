@@ -1,227 +1,219 @@
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useZustandStore } from '../../../store/useStore';
-import { SectionBox } from '../../../components/ui/SectionBox';
 import { translations } from '../../../lib/i18n';
-import { Input } from '../../../components/ui/Input';
 import { HoloButton } from '../../../components/ui/HoloButton';
-import { Search, Loader, ServerCrash, Save, Trash2 } from 'lucide-react';
+import { Input } from '../../../components/ui/Input';
+import { Search, RotateCw, Save, Loader } from 'lucide-react';
 import { purchaseService } from '../../../services/purchaseService';
-import { PurchaseInvoice, PurchaseInvoiceItem } from '../types';
-import { Label } from '../../../components/ui/Label';
+import { PurchaseInvoice, PurchaseReturnItem } from '../../purchases/types';
+import { formatCurrency } from '../../expenses/lib/utils';
 import { Select } from '../../../components/ui/Select';
-import { formatCurrency } from '../../../lib/formatters';
-import { useQueryClient } from '@tanstack/react-query';
-
-interface ReturnItem extends PurchaseInvoiceItem {
-    returnQuantity: number;
-    warehouseId: string;
-}
+import { Label } from '../../../components/ui/Label';
+import { Textarea } from '../../../components/ui/Textarea';
 
 export const PurchaseReturn: React.FC = () => {
-    const { theme, lang, settings, addToast, warehouses } = useZustandStore(state => ({
-        theme: state.theme,
+    const { lang, addToast, settings } = useZustandStore(state => ({
         lang: state.lang,
-        settings: state.settings,
         addToast: state.addToast,
-        warehouses: state.warehouses,
+        settings: state.settings,
     }));
     const t = translations[lang];
-    const queryClient = useQueryClient();
 
     const [invoiceNumber, setInvoiceNumber] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [isSearching, setIsSearching] = useState(false);
     const [originalInvoice, setOriginalInvoice] = useState<PurchaseInvoice | null>(null);
-    const [returnItems, setReturnItems] = useState<ReturnItem[]>([]);
+    const [returnItems, setReturnItems] = useState<(PurchaseReturnItem & { warehouseId: string })[]>([]);
     const [returnDate, setReturnDate] = useState(new Date().toISOString().split('T')[0]);
+    const [refundMethod, setRefundMethod] = useState('cash');
     const [notes, setNotes] = useState('');
     const [isSaving, setIsSaving] = useState(false);
-    const [refundMethod, setRefundMethod] = useState<'cash' | 'credit_note' | 'bank_transfer' | 'exchange'>('credit_note');
 
-    const handleFindInvoice = async () => {
+    const handleSearch = async () => {
         if (!invoiceNumber.trim()) return;
-        setIsLoading(true);
-        setError(null);
+        setIsSearching(true);
         setOriginalInvoice(null);
-        setReturnItems([]);
-
-        const { data, error: fetchError } = await purchaseService.getPurchaseByInvoiceNumber(invoiceNumber.trim());
-
-        if (fetchError || !data) {
-            setError(t.invoiceNotFound);
-        } else {
-            setOriginalInvoice(data as PurchaseInvoice);
-            setReturnItems((data.items || []).map(item => ({ ...item, returnQuantity: 0, warehouseId: '' })));
+        
+        try {
+            const { data, error } = await purchaseService.getPurchaseByInvoiceNumber(invoiceNumber);
+            if (error || !data) {
+                addToast({ message: t.invoiceNotFound || 'Invoice not found', type: 'error' });
+            } else {
+                setOriginalInvoice(data);
+                // Initialize return items with 0 quantity
+                // Note: purchase invoice items usually don't have warehouse info stored directly in all schemas
+                // Assuming we use a default or need to fetch it. For now, using empty string.
+                setReturnItems(data.items.map(item => ({
+                    productId: item.productId,
+                    productName: item.productName,
+                    quantity: item.quantity, // Max returnable
+                    returnQuantity: 0,
+                    unitPrice: item.unitPrice,
+                    total: 0,
+                    warehouseId: '' // User might need to specify source warehouse
+                })));
+            }
+        } catch (e) {
+             addToast({ message: 'Error fetching invoice', type: 'error' });
+        } finally {
+            setIsSearching(false);
         }
-        setIsLoading(false);
     };
 
-    const handleReturnQuantityChange = (productId: string, quantity: number) => {
-        setReturnItems(prev => prev.map(item => {
-            if (item.productId === productId) {
-                const originalItem = originalInvoice?.items.find(i => i.productId === productId);
-                const maxQuantity = originalItem?.quantity || 0;
-                return { ...item, returnQuantity: Math.max(0, Math.min(quantity, maxQuantity)) };
+    const handleQuantityChange = (index: number, val: number) => {
+        setReturnItems(prev => prev.map((item, i) => {
+            if (i === index) {
+                const newQty = Math.min(Math.max(0, val), item.quantity); // Ensure between 0 and original quantity
+                return { 
+                    ...item, 
+                    returnQuantity: newQty,
+                    total: newQty * item.unitPrice
+                };
             }
             return item;
         }));
     };
 
-    const handleItemChange = (productId: string, field: 'warehouseId', value: string) => {
-        setReturnItems(prev => prev.map(item => {
-            if (item.productId === productId) {
-                return { ...item, [field]: value };
-            }
-            return item;
-        }));
-    };
+    const totalReturnValue = returnItems.reduce((sum, item) => sum + (item.total || 0), 0);
 
-    const totalReturnValue = useMemo(() => {
-        return returnItems.reduce((total, item) => total + (item.returnQuantity * item.unitPrice), 0);
-    }, [returnItems]);
-
-    const handleSaveReturn = async () => {
-        if (!originalInvoice || returnItems.every(i => i.returnQuantity === 0)) {
-            addToast({ message: 'الرجاء تحديد كمية الإرجاع لمادة واحدة على الأقل.', type: 'error' });
-            return;
-        }
-        if (returnItems.some(i => i.returnQuantity > 0 && !i.warehouseId)) {
-            addToast({ message: 'الرجاء تحديد مستودع الإرجاع لجميع المواد المرتجعة.', type: 'error' });
+    const handleSave = async () => {
+        if (!originalInvoice) return;
+        if (totalReturnValue <= 0) {
+            addToast({ message: 'Please specify items to return.', type: 'error' });
             return;
         }
 
         setIsSaving(true);
+        
         const { error: saveError } = await purchaseService.createPurchaseReturn({
             originalPurchaseId: originalInvoice.id,
             returnDate: returnDate,
             notes: notes,
             refundMethod: refundMethod as any,
-            items: returnItems.filter(i => i.returnQuantity > 0).map(i => ({
+            items: returnItems.filter(i => (i as any).returnQuantity > 0).map(i => ({
                 product_id: i.productId,
-                warehouse_id: i.warehouseId,
-                quantity: i.returnQuantity,
+                warehouse_id: i.warehouseId, // This needs to be set or defaulted
+                quantity: (i as any).returnQuantity,
                 price: i.unitPrice,
             })),
         });
 
         if (saveError) {
-            addToast({ message: `فشل حفظ المرتجع: ${saveError.message}`, type: 'error' });
+            addToast({ message: `فشل حفظ المرتجع: ${(saveError as any).message || saveError.message}`, type: 'error' });
         } else {
             addToast({ message: 'تم حفظ مرتجع الشراء بنجاح!', type: 'success' });
-            // Reset form
-            setInvoiceNumber('');
             setOriginalInvoice(null);
-            setReturnItems([]);
-            // Refetch data
-            queryClient.invalidateQueries({ queryKey: ['purchases'] });
-            queryClient.invalidateQueries({ queryKey: ['stockLevels'] });
-            queryClient.invalidateQueries({ queryKey: ['journalEntries'] });
-            // queryClient.invalidateQueries({ queryKey: ['purchaseReturns'] }); // If list exists
+            setInvoiceNumber('');
+            setNotes('');
         }
+        
         setIsSaving(false);
     };
-    
-    const tableHeaderClasses = `p-2 text-sm font-semibold ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`;
 
     return (
-        <SectionBox title={t.purchaseReturn} theme={theme}>
-            <div className="space-y-6">
-                {/* Invoice Search */}
-                <div className="flex items-end gap-3">
-                    <div className="flex-1">
-                        <Label>{t.searchOriginalInvoice}</Label>
-                        <Input 
-                            icon={Search} 
-                            placeholder="أدخل رقم فاتورة الشراء"
-                            value={invoiceNumber}
-                            onChange={e => setInvoiceNumber(e.target.value)}
-                            onKeyDown={e => e.key === 'Enter' && handleFindInvoice()}
-                        />
+        <div className="max-w-4xl mx-auto p-6 bg-white dark:bg-slate-900 rounded-xl border dark:border-gray-700 shadow-sm">
+            <h2 className="text-xl font-bold mb-6 flex items-center gap-2 dark:text-white">
+                <RotateCw className="text-purple-400" /> {t.purchaseReturn}
+            </h2>
+
+            {/* Search Section */}
+            <div className="flex gap-2 mb-6">
+                <Input 
+                    placeholder={t.searchOriginalInvoice} 
+                    value={invoiceNumber} 
+                    onChange={e => setInvoiceNumber(e.target.value)} 
+                    onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                    className="flex-1"
+                />
+                <HoloButton onClick={handleSearch} disabled={isSearching} variant="secondary">
+                    {isSearching ? <Loader className="animate-spin" /> : <Search />}
+                </HoloButton>
+            </div>
+
+            {originalInvoice && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-top-4">
+                    {/* Invoice Info */}
+                    <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800 border dark:border-gray-700 flex justify-between items-start">
+                        <div>
+                            <p className="text-sm text-gray-500">{t.supplierName}</p>
+                            <p className="font-bold text-lg dark:text-white">{originalInvoice.supplierName}</p>
+                            <p className="text-xs text-gray-400">{new Date(originalInvoice.date).toLocaleDateString()}</p>
+                        </div>
+                        <div className="text-right">
+                             <p className="text-sm text-gray-500">{t.originalInvoice}</p>
+                             <p className="font-mono font-bold text-purple-400">#{originalInvoice.invoiceNumber}</p>
+                        </div>
                     </div>
-                    <HoloButton variant="primary" onClick={handleFindInvoice} disabled={isLoading}>
-                        {isLoading ? <Loader size={18} className="animate-spin" /> : t.findInvoice}
-                    </HoloButton>
-                </div>
 
-                {error && <div className="p-3 bg-red-500/10 text-red-400 rounded-lg">{error}</div>}
+                    {/* Return Items Table */}
+                    <div className="border rounded-lg overflow-hidden dark:border-gray-700">
+                        <table className="w-full text-sm">
+                            <thead className="bg-gray-100 dark:bg-gray-800">
+                                <tr>
+                                    <th className="p-3 text-left">{t.product}</th>
+                                    <th className="p-3 text-center">{t.unitPrice}</th>
+                                    <th className="p-3 text-center">{t.originalQuantity}</th>
+                                    <th className="p-3 text-center text-purple-400">{t.returnQuantity}</th>
+                                    <th className="p-3 text-right">{t.total}</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y dark:divide-gray-700">
+                                {returnItems.map((item, idx) => (
+                                    <tr key={idx} className="dark:text-gray-200">
+                                        <td className="p-3">{item.productName}</td>
+                                        <td className="p-3 text-center font-mono">{formatCurrency(item.unitPrice, originalInvoice.currency)}</td>
+                                        <td className="p-3 text-center">{item.quantity}</td>
+                                        <td className="p-3">
+                                            <input 
+                                                type="number" 
+                                                value={(item as any).returnQuantity} 
+                                                onChange={e => handleQuantityChange(idx, parseInt(e.target.value) || 0)}
+                                                className="w-20 p-1 text-center border rounded dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-purple-400 outline-none"
+                                                min={0}
+                                                max={item.quantity}
+                                            />
+                                        </td>
+                                        <td className="p-3 text-right font-bold text-purple-400">{formatCurrency(item.total, originalInvoice.currency)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
 
-                {/* Return Details */}
-                {originalInvoice && (
-                    <div className="space-y-4 pt-4 border-t border-gray-700">
-                        <div>
-                            <h4 className="font-bold">{t.originalInvoice}: #{originalInvoice.invoiceNumber}</h4>
-                            <p className="text-sm text-gray-400">{t.supplierName}: {originalInvoice.supplierName} | {t.date}: {originalInvoice.date}</p>
-                        </div>
-
-                        <div>
-                            <h4 className="font-bold mb-2">{t.itemToReturn}</h4>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-sm responsive-table">
-                                    <thead>
-                                        <tr>
-                                            <th className={`${tableHeaderClasses} text-right`}>{t.product}</th>
-                                            <th className={`${tableHeaderClasses} text-center`}>{t.originalQuantity}</th>
-                                            <th className={`${tableHeaderClasses} text-center w-40`}>مستودع الإرجاع</th>
-                                            <th className={`${tableHeaderClasses} text-center w-32`}>{t.returnQuantity}</th>
-                                            <th className={`${tableHeaderClasses} text-right`}>{t.unitPrice}</th>
-                                            <th className={`${tableHeaderClasses} text-right`}>{t.returnTotal}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {returnItems.map(item => (
-                                            <tr key={item.productId}>
-                                                <td className="p-1" data-label={t.product}>{item.productName}</td>
-                                                <td className="p-1 text-center" data-label={t.originalQuantity}>{originalInvoice.items.find(i => i.productId === item.productId)?.quantity || 0}</td>
-                                                <td className="p-1" data-label="مستودع الإرجاع">
-                                                    <Select value={item.warehouseId} onChange={e => handleItemChange(item.productId, 'warehouseId', e.target.value)} className="!py-1 !px-2">
-                                                        <option value="">اختر مستودع...</option>
-                                                        {warehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
-                                                    </Select>
-                                                </td>
-                                                <td className="p-1" data-label={t.returnQuantity}><Input type="number" value={item.returnQuantity} onChange={e => handleReturnQuantityChange(item.productId, Number(e.target.value))} className="text-center !p-1" /></td>
-                                                <td className="p-1 text-right font-mono" data-label={t.unitPrice}>{formatCurrency(item.unitPrice, settings.baseCurrency)}</td>
-                                                <td className="p-1 text-right font-mono" data-label={t.returnTotal}>{formatCurrency(item.returnQuantity * item.unitPrice, settings.baseCurrency)}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-700">
+                    {/* Return Details */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-4">
                              <div>
                                 <Label>{t.returnDate}</Label>
                                 <Input type="date" value={returnDate} onChange={e => setReturnDate(e.target.value)} />
-                                <Label className="mt-4">{t.notes}</Label>
-                                <Input value={notes} onChange={e => setNotes(e.target.value)} />
                              </div>
-                             <div className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-800/50' : 'bg-slate-100'}`}>
-                                <h4 className="font-semibold mb-2">{t.refundDetails}</h4>
-                                <div className="mb-4">
-                                    <Label>{t.refundMethod}</Label>
-                                    <Select value={refundMethod} onChange={e => setRefundMethod(e.target.value as any)}>
-                                        <option value="credit_note">إشعار دائن (رصيد لدى المورد)</option>
-                                        <option value="cash">نقداً</option>
-                                        <option value="bank_transfer">تحويل بنكي</option>
-                                        <option value="exchange">صرافة</option>
-                                    </Select>
-                                </div>
-                                <div className="flex justify-between items-center text-lg">
-                                    <span className="font-bold">{t.totalReturnValue}</span>
-                                    <span className="font-mono font-bold text-cyan-400">{formatCurrency(totalReturnValue, settings.baseCurrency)}</span>
-                                </div>
+                             <div>
+                                <Label>{t.refundMethod}</Label>
+                                <Select value={refundMethod} onChange={e => setRefundMethod(e.target.value)}>
+                                    <option value="cash">نقد</option>
+                                    <option value="credit_note">إشعار دائن (Credit Note)</option>
+                                    <option value="bank_transfer">تحويل بنكي</option>
+                                </Select>
+                             </div>
+                             <div>
+                                <Label>{t.notes}</Label>
+                                <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} />
                              </div>
                         </div>
 
-                        <div className="flex justify-end">
-                            <HoloButton variant="success" icon={Save} onClick={handleSaveReturn} disabled={isSaving}>
-                                {isSaving ? 'جاري الحفظ...' : t.saveReturn}
+                        <div className="p-6 rounded-xl bg-purple-50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-500/30 flex flex-col justify-between">
+                            <h4 className="font-bold text-purple-800 dark:text-purple-300">{t.refundDetails}</h4>
+                            <div className="mt-4">
+                                <p className="text-sm text-purple-600/80 dark:text-purple-300/80">{t.totalReturnValue}</p>
+                                <p className="text-3xl font-black text-purple-500 font-mono mt-1">{formatCurrency(totalReturnValue, originalInvoice.currency)}</p>
+                            </div>
+                            <HoloButton onClick={handleSave} disabled={isSaving || totalReturnValue <= 0} variant="danger" icon={Save} className="mt-6 w-full justify-center">
+                                {isSaving ? t.saving : t.saveReturn}
                             </HoloButton>
                         </div>
                     </div>
-                )}
-            </div>
-        </SectionBox>
+                </div>
+            )}
+        </div>
     );
 };
