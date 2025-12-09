@@ -18,8 +18,9 @@ interface CommandPaletteProps {
 }
 
 export const CommandPalette: React.FC<CommandPaletteProps> = ({ onClose }) => {
+  // Access data safely using (state as any) for loose coupling with CombinedState or just ensuring it works
   const { customers, products, lang } = useZustandStore(state => ({
-    customers: state.customers || [], 
+    customers: (state as any).customers || [], 
     products: state.products || [],
     lang: state.lang
   }));
@@ -36,7 +37,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ onClose }) => {
     { id: 'settings', title: 'Settings / الإعدادات', type: 'page', path: ROUTES.SETTINGS, icon: Settings },
   ];
 
-  const customerResults: CommandItem[] = customers.map(c => ({
+  const customerResults: CommandItem[] = customers.map((c: any) => ({
     id: `cust-${c.id}`,
     title: c.name,
     type: 'customer',
@@ -44,7 +45,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ onClose }) => {
     icon: Users
   }));
 
-  const productResults: CommandItem[] = products.map(p => ({
+  const productResults: CommandItem[] = products.map((p: any) => ({
     id: `prod-${p.id}`,
     title: p.name,
     type: 'product',
@@ -56,10 +57,10 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ onClose }) => {
     if (!query) return pages;
     const lowerQuery = query.toLowerCase();
     
-    // Explicitly type 'p' here to fix implicit any error
+    // Explicitly type callbacks to fix implicit any
     const matchedPages = pages.filter((p: any) => p.title.toLowerCase().includes(lowerQuery));
-    const matchedCustomers = customerResults.filter(c => c.title.toLowerCase().includes(lowerQuery)).slice(0, 5);
-    const matchedProducts = productResults.filter(p => p.title.toLowerCase().includes(lowerQuery)).slice(0, 5);
+    const matchedCustomers = customerResults.filter((c: any) => c.title.toLowerCase().includes(lowerQuery)).slice(0, 5);
+    const matchedProducts = productResults.filter((p: any) => p.title.toLowerCase().includes(lowerQuery)).slice(0, 5);
 
     return [...matchedPages, ...matchedCustomers, ...matchedProducts];
   }, [query, pages, customerResults, productResults]);

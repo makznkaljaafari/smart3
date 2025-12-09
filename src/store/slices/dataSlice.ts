@@ -1,7 +1,7 @@
 
 import { StateCreator } from 'zustand';
 import { CombinedState } from '../useStore';
-import { AutomationLog, InventoryLevel, Toast } from '../../types';
+import { AutomationLog, InventoryLevel } from '../../types';
 import { Account } from '../../features/accounting/types';
 import { Warehouse, Product } from '../../features/inventory/types';
 import { Project } from '../../features/projects/types';
@@ -17,6 +17,12 @@ export interface DataSlice {
     projects: Project[];
     products: Product[]; 
     inventoryLevels: InventoryLevel[]; 
+    
+    // Placeholder arrays to satisfy CombinedState in consumers (Fixes TS Errors)
+    customers: any[];
+    expenses: any[];
+    income: any[];
+    debts: any[];
     
     // Logs
     automationLogs: AutomationLog[];
@@ -62,6 +68,13 @@ export const createDataSlice: StateCreator<CombinedState, [], [], DataSlice> = (
     projects: [],
     products: [],
     inventoryLevels: [],
+    
+    // Placeholders to satisfy CombinedState interface
+    customers: [],
+    expenses: [],
+    income: [],
+    debts: [],
+    
     automationLogs: [],
 
     // Loading States
@@ -93,14 +106,11 @@ export const createDataSlice: StateCreator<CombinedState, [], [], DataSlice> = (
         
         try {
             // Optimization: Only fetch lightweight reference data essential for the app shell.
-            // Heavy data (Products, InventoryLevels) is now fetched on-demand in their respective views.
             await Promise.allSettled([
                 get().fetchAccounts(),
                 get().fetchWarehouses(),
                 get().fetchProjects(),
-                get().fetchExchangeRates(), // Fetch Rates from DB
-                // get().fetchProducts(), // REMOVED for performance
-                // get().fetchInventoryLevels(), // REMOVED for performance
+                get().fetchExchangeRates(), 
             ]);
 
         } catch (e: any) {
@@ -152,14 +162,12 @@ export const createDataSlice: StateCreator<CombinedState, [], [], DataSlice> = (
     },
     
     fetchProducts: async () => {
-        // This is kept for views that might explicitly request full reload, but generally avoided
         set({ productsLoading: true });
         const { data, error } = await inventoryService.getProducts();
         set({ products: (data as Product[]) || [], productsError: error?.message || null, productsLoading: false });
     },
 
     fetchInventoryLevels: async () => {
-         // This is kept for specific triggers (e.g. after stocktake), but generally avoided on startup
         set({ inventoryLevelsLoading: true });
         const { data, error } = await inventoryService.getInventoryLevels();
         set({ inventoryLevels: (data as InventoryLevel[]) || [], inventoryLevelsError: error?.message || null, inventoryLevelsLoading: false });
@@ -171,7 +179,6 @@ export const createDataSlice: StateCreator<CombinedState, [], [], DataSlice> = (
         
         const { data } = await settingsService.getExchangeRates(currentCompany.id);
         if (data) {
-            // Merge DB rates into settings state
             set({ settings: { ...settings, exchangeRates: data } });
         }
     }

@@ -1,3 +1,4 @@
+
 import { supabase } from '../../../lib/supabaseClient';
 import { getStore } from '../../../lib/storeAccess';
 import { ReconciliationTransaction } from '../../accounting/types';
@@ -8,7 +9,7 @@ export const reconciliationService = {
      * Get unreconciled transactions for a specific account up to a date.
      */
     async getUnreconciledTransactions(accountId: string, dateTo: string): Promise<{ data: ReconciliationTransaction[], error: any }> {
-        const companyId = getStore().getState().currentCompany?.id;
+        const companyId = getStore().getState().currentCompany?.id || '';
         
         // Filter by is_reconciled = false (or null)
         const { data, error } = await supabase
@@ -95,7 +96,7 @@ export const reconciliationService = {
         await journalService.saveJournalEntry({
             date: new Date().toISOString().split('T')[0],
             description: 'Foreign Currency Revaluation',
-            createdBy: user?.name,
+            createdBy: user?.name || '', // Ensure default empty string to avoid undefined error
             referenceType: 'revaluation',
             lines: lines.map(l => ({...l, id: crypto.randomUUID()}))
         });

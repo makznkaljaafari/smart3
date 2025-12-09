@@ -59,7 +59,8 @@ export const useInventoryData = () => {
   const totalCount = productsData?.count || 0;
   const totalPages = Math.ceil(totalCount / pageSize);
   
-  const stats = statsData?.data || { totalValue: 0, lowStockCount: 0, totalCount: 0 };
+  // Cast to any to allow dynamic property addition (totalCount) without TS errors
+  const stats: any = statsData?.data || { totalValue: 0, lowStockCount: 0, totalSku: 0 };
   stats.totalCount = totalCount; // Sync count with paginated query total
 
   // Stock Levels (Aggregated for display in list)
@@ -76,11 +77,9 @@ export const useInventoryData = () => {
       if (!searchTerm.trim()) return;
       setIsAiSearching(true);
       try {
-          // Need all products for AI search context - this is heavy, ideally done backend.
-          // For now, we fetch a larger set or just use current page context + search API
           const { data: allProducts } = await inventoryService.getProductsPaginated({ page: 1, pageSize: 1000 });
           
-          const productList = allProducts.map(p => ({ id: p.id, name: p.name, desc: p.description, sku: p.sku }));
+          const productList = allProducts.map((p: any) => ({ id: p.id, name: p.name, desc: p.description, sku: p.sku }));
           const prompt = `Filter these products based on the query: "${searchTerm}". Return JSON array of matching IDs. Products: ${JSON.stringify(productList)}`;
           
           const text = await callAIProxy(prompt, { responseMimeType: 'application/json' });
@@ -98,7 +97,6 @@ export const useInventoryData = () => {
   // Filter products if AI search active
   const displayedProducts = useMemo(() => {
       if (aiFilteredProductIds !== null) {
-         // Fix: explicitly type p as any to resolve implicit any error
          return products.filter((p: any) => aiFilteredProductIds.includes(p.id));
       }
       return products;
