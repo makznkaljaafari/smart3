@@ -1,17 +1,17 @@
 
 import React from 'react';
 import { useZustandStore } from '../../../../store/useStore';
-import { Product } from '../../../../types';
+import { Product, AppTheme } from '../../../../types';
 
 interface TopStockedListProps {
   items: { id: string; quantity: number; name: string; sku: string }[];
   maxStock: number;
-  theme: string;
+  theme: AppTheme;
   t: Record<string, string>;
 }
 
 export const TopStockedList: React.FC<TopStockedListProps> = ({ items, maxStock, theme, t }) => {
-  const isDark = theme === 'dark';
+  const isDark = !theme.startsWith('light');
 
   return (
     <div className="space-y-4">

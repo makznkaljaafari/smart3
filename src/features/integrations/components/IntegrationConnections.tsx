@@ -4,7 +4,7 @@ import { useZustandStore } from '../../../store/useStore';
 import { translations } from '../../../lib/i18n';
 import { Toggle } from '../../../components/ui/Toggle';
 import { HoloButton } from '../../../components/ui/HoloButton';
-import { AppEvent, BankConnection, SettingsState, CurrencyCode } from '../../../types';
+import { AppEvent, BankConnection, SettingsState, CurrencyCode, AppTheme } from '../../../types';
 import { accountService } from '../../../services/accountService';
 import { notifyAll } from '../../../lib/events';
 import { Zap, AlertTriangle, Save, Landmark, Trash2, X, Building2, ArrowRightLeft, Wallet, Plus, PlusCircle, Copy, Bot } from 'lucide-react';
@@ -27,7 +27,7 @@ interface IntegrationConnectionsProps {
   localSettings: SettingsState;
   setLocalSettings: React.Dispatch<React.SetStateAction<SettingsState>>;
   t: Record<string, string>;
-  theme: 'light' | 'dark';
+  theme: AppTheme;
   lang: 'ar' | 'en';
 }
 
@@ -51,6 +51,8 @@ export const IntegrationConnections: React.FC<IntegrationConnectionsProps> = ({ 
     const [currency, setCurrency] = useState<CurrencyCode>(settings.baseCurrency);
     const [openingBalance, setOpeningBalance] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+
+    const isDark = !theme.startsWith('light');
 
     // Calculate Edge Function URL
     const supabaseUrl = getEnvVar('VITE_SUPABASE_URL') || '';
@@ -180,9 +182,9 @@ export const IntegrationConnections: React.FC<IntegrationConnectionsProps> = ({ 
         addToast({ message: 'Webhook URL copied!', type: 'success' });
     }
     
-    const alertClasses = theme === 'dark' ? 'bg-orange-500/10 border-orange-500/30 text-orange-300' : 'bg-amber-100 border-amber-300 text-amber-800';
-    const inputClasses = `w-full rounded-lg border focus:outline-none transition-colors focus:ring-2 focus:ring-cyan-500 px-3 py-3 ${theme === 'dark' ? 'bg-[rgb(var(--bg-tertiary-rgb))] text-[rgb(var(--text-primary-rgb))] border-[rgb(var(--border-primary-rgb))] placeholder:[rgb(var(--text-muted-rgb))] disabled:opacity-50' : 'bg-white text-slate-800 border-slate-300 placeholder:text-slate-400 disabled:bg-slate-100'}`;
-    const labelClasses = `block text-sm mb-2 ${theme === 'dark' ? 'text-[rgb(var(--text-secondary-rgb))]' : 'text-slate-700'}`;
+    const alertClasses = isDark ? 'bg-orange-500/10 border-orange-500/30 text-orange-300' : 'bg-amber-100 border-amber-300 text-amber-800';
+    const inputClasses = `w-full rounded-lg border focus:outline-none transition-colors focus:ring-2 focus:ring-cyan-500 px-3 py-3 ${isDark ? 'bg-[rgb(var(--bg-tertiary-rgb))] text-[rgb(var(--text-primary-rgb))] border-[rgb(var(--border-primary-rgb))] placeholder:[rgb(var(--text-muted-rgb))] disabled:opacity-50' : 'bg-white text-slate-800 border-slate-300 placeholder:text-slate-400 disabled:bg-slate-100'}`;
+    const labelClasses = `block text-sm mb-2 ${isDark ? 'text-[rgb(var(--text-secondary-rgb))]' : 'text-slate-700'}`;
     
     const financialInstitutions = [
         { name: 'Al-Kuraimi Bank (بنك الكريمي)', type: 'bank' },
@@ -193,7 +195,7 @@ export const IntegrationConnections: React.FC<IntegrationConnectionsProps> = ({ 
 
     return (
         <>
-            <div className={`p-6 rounded-2xl border ${theme === 'dark' ? 'bg-slate-900 border-gray-700' : 'bg-white border-slate-200'}`}>
+            <div className={`p-6 rounded-2xl border ${isDark ? 'bg-slate-900 border-gray-700' : 'bg-white border-slate-200'}`}>
                 <div className="space-y-8 divide-y divide-gray-700">
                     
                     {/* Bots Configuration Section */}
@@ -202,7 +204,7 @@ export const IntegrationConnections: React.FC<IntegrationConnectionsProps> = ({ 
                          
                          <div className="grid md:grid-cols-2 gap-6">
                              {/* Telegram Card */}
-                             <div className={`p-5 rounded-xl border ${theme === 'dark' ? 'bg-gray-800/30 border-gray-700' : 'bg-slate-50 border-slate-200'}`}>
+                             <div className={`p-5 rounded-xl border ${isDark ? 'bg-gray-800/30 border-gray-700' : 'bg-slate-50 border-slate-200'}`}>
                                  <div className="flex justify-between items-start mb-4">
                                      <h4 className="font-bold flex items-center gap-2"><Zap className="text-blue-400" size={18}/> Telegram Bot</h4>
                                      <HoloButton variant="secondary" onClick={() => handleOpenIntegrationModal('telegram')} className="!py-1.5 !px-3 !text-xs">{t.configure}</HoloButton>
@@ -225,7 +227,7 @@ export const IntegrationConnections: React.FC<IntegrationConnectionsProps> = ({ 
                              </div>
 
                              {/* WhatsApp Card */}
-                             <div className={`p-5 rounded-xl border ${theme === 'dark' ? 'bg-gray-800/30 border-gray-700' : 'bg-slate-50 border-slate-200'}`}>
+                             <div className={`p-5 rounded-xl border ${isDark ? 'bg-gray-800/30 border-gray-700' : 'bg-slate-50 border-slate-200'}`}>
                                  <div className="flex justify-between items-start mb-4">
                                      <h4 className="font-bold flex items-center gap-2"><Zap className="text-green-400" size={18}/> WhatsApp (Meta)</h4>
                                      <HoloButton variant="secondary" onClick={() => handleOpenIntegrationModal('whatsapp')} className="!py-1.5 !px-3 !text-xs">{t.configure}</HoloButton>
@@ -246,7 +248,7 @@ export const IntegrationConnections: React.FC<IntegrationConnectionsProps> = ({ 
                         <div className="flex justify-between items-center mb-4">
                             <div>
                                 <h3 className="font-semibold mb-1 text-lg">{lang === 'ar' ? 'الحسابات البنكية' : 'Banks & Exchange'}</h3>
-                                <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-slate-500'}`}>
+                                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
                                     {lang === 'ar' ? 'إدارة حساباتك في البنوك وشركات الصرافة.' : 'Manage your accounts with banks and exchange companies.'}
                                 </p>
                             </div>
@@ -257,9 +259,9 @@ export const IntegrationConnections: React.FC<IntegrationConnectionsProps> = ({ 
                         
                         <div className="space-y-3">
                             {(localSettings.integrations.bankConnections || []).map(conn => (
-                                <div key={conn.id} className={`p-3 rounded-lg flex items-center justify-between gap-4 ${theme === 'dark' ? 'bg-gray-800/50' : 'bg-slate-100'}`}>
+                                <div key={conn.id} className={`p-3 rounded-lg flex items-center justify-between gap-4 ${isDark ? 'bg-gray-800/50' : 'bg-slate-100'}`}>
                                     <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-full ${theme === 'dark' ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-600'}`}>
+                                        <div className={`p-2 rounded-full ${isDark ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-600'}`}>
                                             <Wallet size={20} />
                                         </div>
                                         <div>
@@ -273,7 +275,7 @@ export const IntegrationConnections: React.FC<IntegrationConnectionsProps> = ({ 
                                 </div>
                             ))}
                             {(localSettings.integrations.bankConnections || []).length === 0 && (
-                                <div className={`text-center p-6 rounded-lg border-2 border-dashed ${theme === 'dark' ? 'border-gray-700 text-gray-500' : 'border-slate-300 text-slate-400'}`}>
+                                <div className={`text-center p-6 rounded-lg border-2 border-dashed ${isDark ? 'border-gray-700 text-gray-500' : 'border-slate-300 text-slate-400'}`}>
                                     {lang === 'ar' ? 'لم يتم إضافة أي حسابات بنكية بعد.' : 'No bank accounts added yet.'}
                                 </div>
                             )}
@@ -307,7 +309,7 @@ export const IntegrationConnections: React.FC<IntegrationConnectionsProps> = ({ 
              {/* Bank Modal */}
              {isBankModalOpen && (
                 <div className="fixed inset-0 bg-black/75 z-[100] flex items-center justify-center p-4" onMouseDown={() => setIsBankModalOpen(false)}>
-                    <div className={`w-full max-w-lg p-6 rounded-2xl shadow-2xl flex flex-col max-h-[80vh] ${theme === 'dark' ? 'bg-gray-900 border-2 border-cyan-500/50' : 'bg-white'}`} onMouseDown={e => e.stopPropagation()}>
+                    <div className={`w-full max-w-lg p-6 rounded-2xl shadow-2xl flex flex-col max-h-[80vh] ${isDark ? 'bg-gray-900 border-2 border-cyan-500/50' : 'bg-white'}`} onMouseDown={e => e.stopPropagation()}>
                         
                         {!selectedInstitution ? (
                             <>
@@ -316,15 +318,15 @@ export const IntegrationConnections: React.FC<IntegrationConnectionsProps> = ({ 
                                     <button onClick={() => setIsBankModalOpen(false)}><X/></button>
                                 </div>
                                 <div className="space-y-2 overflow-y-auto flex-1 pr-2">
-                                    <button onClick={() => handleOpenBankModal()} className={`w-full p-4 text-left rounded-xl flex items-center justify-between transition-all group border-2 border-dashed ${theme === 'dark' ? 'bg-gray-800/50 border-cyan-500/50 hover:bg-gray-800' : 'bg-slate-50 border-cyan-300 hover:bg-slate-100'}`}>
+                                    <button onClick={() => handleOpenBankModal()} className={`w-full p-4 text-left rounded-xl flex items-center justify-between transition-all group border-2 border-dashed ${isDark ? 'bg-gray-800/50 border-cyan-500/50 hover:bg-gray-800' : 'bg-slate-50 border-cyan-300 hover:bg-slate-100'}`}>
                                          <div className="flex items-center gap-3">
-                                            <div className={`p-2 rounded-lg ${theme === 'dark' ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-600'}`}><PlusCircle size={20} /></div>
+                                            <div className={`p-2 rounded-lg ${isDark ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-600'}`}><PlusCircle size={20} /></div>
                                             <div><span className="font-medium block">{lang === 'ar' ? 'إضافة بنك/صراف آخر' : 'Add Custom Institution'}</span></div>
                                         </div>
-                                        <ArrowRightLeft size={16} className={`group-hover:text-cyan-400 transition-colors ${theme === 'dark' ? 'text-gray-500' : 'text-slate-400'}`} />
+                                        <ArrowRightLeft size={16} className={`group-hover:text-cyan-400 transition-colors ${isDark ? 'text-gray-500' : 'text-slate-400'}`} />
                                     </button>
                                     {financialInstitutions.map((inst, idx) => (
-                                        <button key={idx} onClick={() => handleOpenBankModal(inst)} className={`w-full p-4 text-left rounded-xl flex items-center justify-between transition-all group ${theme === 'dark' ? 'bg-gray-800 hover:bg-gray-700' : 'bg-slate-50 hover:bg-slate-100'}`}>
+                                        <button key={idx} onClick={() => handleOpenBankModal(inst)} className={`w-full p-4 text-left rounded-xl flex items-center justify-between transition-all group ${isDark ? 'bg-gray-800 hover:bg-gray-700' : 'bg-slate-50 hover:bg-slate-100'}`}>
                                             <div className="flex items-center gap-3">
                                                 <div className={`p-2 rounded-lg ${inst.type === 'bank' ? 'bg-blue-500/10 text-blue-400' : 'bg-green-500/10 text-green-400'}`}>{inst.type === 'bank' ? <Building2 size={20} /> : <ArrowRightLeft size={20} />}</div>
                                                 <span className="font-medium">{inst.name}</span>

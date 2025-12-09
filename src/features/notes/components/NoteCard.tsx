@@ -1,11 +1,13 @@
+
 import React from 'react';
 import { Note } from '../../../types';
 import { getPriorityLabel, getStatusLabel, formatShortDate, CATEGORY_CONFIG, getPriorityClass, getStatusClass } from '../lib/utils';
 import { Pin, Star, Lock, Calendar, Clock, MoreVertical, Edit2, Trash2 } from 'lucide-react';
+import { AppTheme } from '../../../types';
 
 interface NoteCardProps {
   note: Note;
-  theme: 'light' | 'dark';
+  theme: AppTheme;
   lang: 'ar' | 'en';
   onView: (note: Note) => void;
   onEdit: (note: Note) => void;
@@ -17,10 +19,11 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, theme, lang, onView, o
   const [menuOpen, setMenuOpen] = React.useState(false);
   const categoryConfig = CATEGORY_CONFIG[note.category];
   const CategoryIcon = categoryConfig.icon;
+  const isDark = !theme.startsWith('light');
 
   const cardClasses = `bg-[rgb(var(--bg-secondary-rgb))] border-[rgb(var(--border-primary-rgb))] hover:border-[var(--accent-border-50)]`;
     
-  const noteColorStyle = theme === 'dark' 
+  const noteColorStyle = isDark 
     ? { backgroundColor: note.color || undefined, borderColor: note.color ? `${note.color.slice(0, 7)}` : undefined }
     : { backgroundColor: note.color ? note.color.replace('33', '80') : undefined };
 

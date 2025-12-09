@@ -12,6 +12,7 @@ import { Select } from '../../../components/ui/Select';
 import { CustomerSupplierSearch } from '../../invoices/components/CustomerSupplierSearch';
 import { currencyLabels } from '../../../lib/i18n';
 import { callAIProxy, cleanJsonString } from '../../../lib/aiClient';
+import { AppTheme } from '../../../types';
 
 const INCOME_CATEGORY_CONFIG: Record<IncomeCategory, { label: string; icon: React.ElementType }> = {
     product_sales: { label: 'مبيعات منتجات', icon: Tag },
@@ -22,7 +23,7 @@ const INCOME_CATEGORY_CONFIG: Record<IncomeCategory, { label: string; icon: Reac
     other: { label: 'أخرى', icon: BarChart3 },
 };
 
-export const IncomeFormModal: React.FC<{ income?: Income; onClose: () => void; onSave: (data: Partial<Income>) => Promise<void>; t: any; theme: 'dark' | 'light' }> = ({ income, onClose, onSave, t, theme }) => {
+export const IncomeFormModal: React.FC<{ income?: Income; onClose: () => void; onSave: (data: Partial<Income>) => Promise<void>; t: any; theme: AppTheme }> = ({ income, onClose, onSave, t, theme }) => {
     const { modalRef, headerRef, position, size, handleDragStart, handleResizeStart } = useDraggableAndResizable({ initialSize: { width: 896, height: 800 } });
     const { accounts, lang, projects, settings } = useZustandStore(state => ({
         accounts: state.accounts,
@@ -45,6 +46,7 @@ export const IncomeFormModal: React.FC<{ income?: Income; onClose: () => void; o
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [isSuggestingAccounts, setIsSuggestingAccounts] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const isDark = theme.startsWith('dark');
 
     const handleChange = (field: keyof Income, value: any) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -106,8 +108,8 @@ export const IncomeFormModal: React.FC<{ income?: Income; onClose: () => void; o
         }
     };
 
-    const formInputClasses = `w-full rounded-lg p-3 border focus:outline-none transition-colors focus:ring-2 focus:ring-cyan-500 ${theme === 'dark' ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-slate-800 border-slate-300'}`;
-    const labelClasses = `block text-sm mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-slate-700'}`;
+    const formInputClasses = `w-full rounded-lg p-3 border focus:outline-none transition-colors focus:ring-2 focus:ring-cyan-500 ${isDark ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-slate-800 border-slate-300'}`;
+    const labelClasses = `block text-sm mb-2 ${isDark ? 'text-gray-300' : 'text-slate-700'}`;
     
     const revenueAccounts = accounts.filter(a => a.type === 'revenue' && !a.isPlaceholder);
     
@@ -124,14 +126,14 @@ export const IncomeFormModal: React.FC<{ income?: Income; onClose: () => void; o
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" onMouseDown={onClose}>
-            <div ref={modalRef} style={{ left: `${position.x}px`, top: `${position.y}px`, width: `${size.width}px`, height: `${size.height}px` }} className={`fixed rounded-2xl shadow-2xl flex flex-col ${theme === 'dark' ? 'bg-gray-900 border-2 border-cyan-500/50' : 'bg-slate-50 border'}`} onMouseDown={e => e.stopPropagation()}>
-                <div ref={headerRef} onMouseDown={handleDragStart} onTouchStart={handleDragStart} className={`p-6 border-b flex items-center justify-between cursor-move ${theme === 'dark' ? 'border-gray-700' : 'border-slate-200'}`}>
+            <div ref={modalRef} style={{ left: `${position.x}px`, top: `${position.y}px`, width: `${size.width}px`, height: `${size.height}px` }} className={`fixed rounded-2xl shadow-2xl flex flex-col ${isDark ? 'bg-gray-900 border-2 border-cyan-500/50' : 'bg-slate-50 border'}`} onMouseDown={e => e.stopPropagation()}>
+                <div ref={headerRef} onMouseDown={handleDragStart} onTouchStart={handleDragStart} className={`p-6 border-b flex items-center justify-between cursor-move ${isDark ? 'border-gray-700' : 'border-slate-200'}`}>
                     <h3 className="text-2xl font-bold">{isEdit ? 'تعديل إيراد' : 'إضافة إيراد جديد'}</h3>
                     <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-500/20"><X size={24} /></button>
                 </div>
                 <div className="overflow-y-auto flex-1 p-6 space-y-6">
                     <div className="grid md:grid-cols-2 gap-4">
-                        <div><label className={labelClasses}>العنوان *</label><input type="text" value={formData.title} onChange={e => handleChange('title', e.target.value)} className={formInputClasses}/>{errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}</div>
+                        <div><label className={labelClasses}>العنوان *</label><input type="text" value={formData.title || ''} onChange={e => handleChange('title', e.target.value)} className={formInputClasses}/>{errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}</div>
                         
                         <div>
                             <Label>العميل (اختياري)</Label>
@@ -148,7 +150,7 @@ export const IncomeFormModal: React.FC<{ income?: Income; onClose: () => void; o
                         </div>
 
                         <div><label className={labelClasses}>المصدر (نص حر)</label><input type="text" value={formData.source || ''} onChange={e => handleChange('source', e.target.value)} className={formInputClasses}/></div>
-                        <div><label className={labelClasses}>المبلغ *</label><input type="number" value={formData.amount} onChange={e => handleChange('amount', parseFloat(e.target.value))} className={formInputClasses}/>{errors.amount && <p className="text-red-500 text-xs mt-1">{errors.amount}</p>}</div>
+                        <div><label className={labelClasses}>المبلغ *</label><input type="number" value={formData.amount || ''} onChange={e => handleChange('amount', parseFloat(e.target.value))} className={formInputClasses}/>{errors.amount && <p className="text-red-500 text-xs mt-1">{errors.amount}</p>}</div>
                         
                         <div>
                             <label className={labelClasses}>العملة</label>
@@ -160,7 +162,7 @@ export const IncomeFormModal: React.FC<{ income?: Income; onClose: () => void; o
                             </select>
                         </div>
 
-                        <div><label className={labelClasses}>التاريخ *</label><input type="date" value={formData.date?.split('T')[0]} onChange={e => handleChange('date', e.target.value)} className={formInputClasses}/>{errors.date && <p className="text-red-500 text-xs mt-1">{errors.date}</p>}</div>
+                        <div><label className={labelClasses}>التاريخ *</label><input type="date" value={formData.date?.split('T')[0] || ''} onChange={e => handleChange('date', e.target.value)} className={formInputClasses}/>{errors.date && <p className="text-red-500 text-xs mt-1">{errors.date}</p>}</div>
                         <div><label className={labelClasses}>الفئة</label><select value={formData.category} onChange={e => handleChange('category', e.target.value as IncomeCategory)} className={formInputClasses}>{Object.entries(INCOME_CATEGORY_CONFIG).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}</select></div>
                         
                         <div>
@@ -178,7 +180,7 @@ export const IncomeFormModal: React.FC<{ income?: Income; onClose: () => void; o
                     
                      <section>
                         <h4 className="text-lg font-bold mb-4 text-white flex items-center gap-2"><Briefcase className="text-cyan-400" /> {t.project}</h4>
-                        <div className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-800/50' : 'bg-slate-100'}`}>
+                        <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-800/50' : 'bg-slate-100'}`}>
                             <Label>ربط الإيراد بمشروع</Label>
                             <Select
                                 value={formData.projectId || ''}
@@ -194,7 +196,7 @@ export const IncomeFormModal: React.FC<{ income?: Income; onClose: () => void; o
                     
                      <section>
                         <h4 className="text-lg font-bold mb-4 text-white flex items-center gap-2"><Zap className="text-cyan-400" /> الأتمتة</h4>
-                        <div className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-800/50' : 'bg-slate-100'}`}>
+                        <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-800/50' : 'bg-slate-100'}`}>
                             <div className="flex items-center justify-between">
                                 <Label className="mb-0">إنشاء إيراد متكرر تلقائيًا من هذا القالب</Label>
                                 <Toggle
@@ -254,8 +256,8 @@ export const IncomeFormModal: React.FC<{ income?: Income; onClose: () => void; o
                     </section>
                     <div><label className={labelClasses}>ملاحظات</label><textarea value={formData.notes || ''} onChange={e => handleChange('notes', e.target.value)} rows={3} className={formInputClasses} /></div>
                 </div>
-                <div className={`flex justify-end gap-3 p-4 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-slate-200'}`}>
-                    <button type="button" onClick={onClose} className={`px-6 py-3 rounded-xl font-semibold ${theme === 'dark' ? 'bg-gray-800' : 'bg-slate-200'}`}>{t.cancel}</button>
+                <div className={`flex justify-end gap-3 p-4 border-t ${isDark ? 'border-gray-700' : 'border-slate-200'}`}>
+                    <button type="button" onClick={onClose} className={`px-6 py-3 rounded-xl font-semibold ${isDark ? 'bg-gray-800' : 'bg-slate-200'}`}>{t.cancel}</button>
                     <HoloButton variant="success" icon={isSaving ? Loader : Save} onClick={handleSubmit} disabled={isSaving}>
                         {isSaving ? (lang === 'ar' ? 'جاري الحفظ...' : 'Saving...') : (isEdit ? t.saveChanges : 'إضافة الإيراد')}
                     </HoloButton>

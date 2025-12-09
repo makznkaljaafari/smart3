@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { SectionBox } from '../../../components/ui/SectionBox';
 import { Toggle } from '../../../components/ui/Toggle';
 import { HoloButton } from '../../../components/ui/HoloButton';
-import { SettingsState, AppEvent } from '../../../types';
+import { SettingsState, AppEvent, AppTheme } from '../../../types';
 import { notifyAll } from '../../../lib/events';
 import { Zap, AlertTriangle } from 'lucide-react';
 
@@ -11,27 +12,28 @@ interface IntegrationsSettingsProps {
   setLocalSettings: React.Dispatch<React.SetStateAction<SettingsState>>;
   t: Record<string, string>;
   lang: 'ar' | 'en';
-  theme: 'light' | 'dark';
+  theme: AppTheme;
 }
 
 export const IntegrationsSettings: React.FC<IntegrationsSettingsProps> = ({ localSettings, setLocalSettings, t, lang, theme }) => {
-  const inputClasses = theme === 'dark'
+  const isDark = theme.startsWith('dark');
+  const inputClasses = isDark
     ? 'bg-gray-800 text-white border-gray-700 placeholder:text-gray-500'
     : 'bg-slate-50 text-slate-900 border-slate-300 placeholder:text-slate-400';
   
-  const alertClasses = theme === 'dark'
+  const alertClasses = isDark
     ? 'bg-orange-500/10 border-orange-500/30 text-orange-300'
     : 'bg-amber-100 border-amber-300 text-amber-800';
   
-  const labelClasses = `block text-sm mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-slate-700'}`;
+  const labelClasses = `block text-sm mb-2 ${isDark ? 'text-gray-300' : 'text-slate-700'}`;
 
 
   return (
     <>
       <SectionBox title={t.notifyChannels} theme={theme}>
         <div className="space-y-4">
-          <div className="flex items-center justify-between"><span className={theme === 'dark' ? 'text-gray-300' : 'text-slate-700'}>{t.whatsapp}</span><Toggle checked={localSettings.notifications.whatsapp} onChange={(v) => setLocalSettings((p) => ({ ...p, notifications: { ...p.notifications, whatsapp: v } }))} /></div>
-          <div className="flex items-center justify-between"><span className={theme === 'dark' ? 'text-gray-300' : 'text-slate-700'}>{t.telegram}</span><Toggle checked={localSettings.notifications.telegram} onChange={(v) => setLocalSettings((p) => ({ ...p, notifications: { ...p.notifications, telegram: v } }))} /></div>
+          <div className="flex items-center justify-between"><span className={isDark ? 'text-gray-300' : 'text-slate-700'}>{t.whatsapp}</span><Toggle checked={localSettings.notifications.whatsapp} onChange={(v) => setLocalSettings((p) => ({ ...p, notifications: { ...p.notifications, whatsapp: v } }))} /></div>
+          <div className="flex items-center justify-between"><span className={isDark ? 'text-gray-300' : 'text-slate-700'}>{t.telegram}</span><Toggle checked={localSettings.notifications.telegram} onChange={(v) => setLocalSettings((p) => ({ ...p, notifications: { ...p.notifications, telegram: v } }))} /></div>
         </div>
       </SectionBox>
       <div className="mt-6">

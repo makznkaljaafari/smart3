@@ -63,8 +63,8 @@ export const useZustandStore = create<CombinedState>()(
               currentCompany: state.currentCompany,
               userRole: state.userRole,
               companiesLoaded: state.companiesLoaded,
-              // Cache key reference data to avoid flicker on load
-              products: state.products,
+              // Cache small reference data to avoid flicker on load
+              // Removed 'products' to improve performance. Large lists are handled by React Query.
               warehouses: state.warehouses,
               inventoryLevels: state.inventoryLevels,
             }),

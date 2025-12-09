@@ -7,7 +7,7 @@ import { getStatusInfo, getRiskInfo, formatCurrency } from '../lib/utils';
 import { useZustandStore } from '../../../store/useStore';
 import { eventBus } from '../../../lib/events';
 import { HoloButton } from '../../../components/ui/HoloButton';
-import { LangCode } from '../../../types';
+import { LangCode, AppTheme } from '../../../types';
 import { translations } from '../../../lib/i18n';
 import { analyzeCustomerRisk } from '../../../services/aiService';
 import { marked } from 'marked';
@@ -16,7 +16,7 @@ import { salesService } from '../../../services/salesService';
 import { debtService } from '../../../services/debtService';
 import { CustomerContactInfo } from './details/CustomerContactInfo';
 
-export const CustomerDetailsModal: React.FC<{ customer: Customer | null; onClose: () => void; theme: 'light' | 'dark'; lang: 'ar' | 'en' }> = ({ customer, onClose, theme, lang }) => {
+export const CustomerDetailsModal: React.FC<{ customer: Customer | null; onClose: () => void; theme: AppTheme; lang: 'ar' | 'en' }> = ({ customer, onClose, theme, lang }) => {
   const { modalRef, headerRef, position, size, handleDragStart } = useDraggableAndResizable({ initialSize: { width: 900, height: 750 }, minSize: { width: 600, height: 500 }});
   const { addToast } = useZustandStore();
   const t = translations[lang];
@@ -95,7 +95,7 @@ export const CustomerDetailsModal: React.FC<{ customer: Customer | null; onClose
     addToast({ message: `تم إرسال كشف الحساب إلى ${customer.name}`, type: 'success'});
   };
 
-  const isDark = theme === 'dark';
+  const isDark = theme.startsWith('dark');
   const cardBg = isDark ? 'bg-gray-800/40 border-white/5' : 'bg-slate-50 border-slate-200';
 
   return (

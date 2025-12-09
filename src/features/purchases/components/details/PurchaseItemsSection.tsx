@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { PurchaseInvoice } from '../../../types';
+import { PurchaseInvoice } from '../../../../types';
 import { useZustandStore } from '../../../../store/useStore';
 import { formatCurrency } from '../../../../lib/formatters';
 
@@ -12,7 +12,7 @@ interface PurchaseItemsSectionProps {
 
 export const PurchaseItemsSection: React.FC<PurchaseItemsSectionProps> = ({ items, currency, t }) => {
   const theme = useZustandStore(state => state.theme);
-  const isDark = theme === 'dark';
+  const isDark = !theme.startsWith('light');
 
   return (
     <div>

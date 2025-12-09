@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { SettingsState, WebhookConfig } from '../../../types';
+import { SettingsState, WebhookConfig, AppTheme } from '../../../types';
 import { HoloButton } from '../../../components/ui/HoloButton';
 import { Plus, Webhook, Trash2, Edit2, Zap, Activity, CheckCircle, XCircle } from 'lucide-react';
 import { WebhookFormModal } from './WebhookFormModal';
@@ -11,7 +11,7 @@ interface WebhooksManagerProps {
     localSettings: SettingsState;
     setLocalSettings: React.Dispatch<React.SetStateAction<SettingsState>>;
     t: Record<string, string>;
-    theme: 'light' | 'dark';
+    theme: AppTheme;
     lang: 'ar' | 'en';
 }
 
@@ -21,7 +21,7 @@ export const WebhooksManager: React.FC<WebhooksManagerProps> = ({ localSettings,
     const [editingWebhook, setEditingWebhook] = useState<WebhookConfig | null>(null);
     const [testingId, setTestingId] = useState<string | null>(null);
 
-    const isDark = theme === 'dark';
+    const isDark = !theme.startsWith('light');
 
     const handleSaveWebhook = (webhook: WebhookConfig) => {
         const currentWebhooks = localSettings.integrations.webhooks || [];

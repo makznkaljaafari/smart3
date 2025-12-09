@@ -45,7 +45,7 @@ export const DashboardStatsGrid: React.FC<DashboardStatsGridProps> = ({
       return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
             {[...Array(6)].map((_, i) => (
-                <div key={i} className={`lg:col-span-2 rounded-xl overflow-hidden border ${theme.includes('dark') ? 'border-gray-800' : 'border-slate-200'}`}>
+                <div key={i} className={`lg:col-span-2 rounded-xl overflow-hidden border ${theme.startsWith('dark') ? 'border-gray-800' : 'border-slate-200'}`}>
                     <Skeleton height="100%" className="min-h-[140px]" variant="rectangular" />
                 </div>
             ))}
@@ -93,7 +93,7 @@ export const DashboardStatsGrid: React.FC<DashboardStatsGridProps> = ({
                 briefing={briefing}
                 isLoading={isBriefingLoading}
                 onRegenerate={onGenerateBriefing}
-                theme={theme as AppTheme}
+                theme={theme}
                 t={t}
                 inCustomizeMode={customizeMode}
                 isVisible={cardConfig.visible}
@@ -110,7 +110,7 @@ export const DashboardStatsGrid: React.FC<DashboardStatsGridProps> = ({
               <FinancialHealthCard
                 score={financialHealth?.score}
                 summary={financialHealth?.summary}
-                theme={theme as AppTheme}
+                theme={theme}
                 t={t}
                 onViewDetails={onViewHealthDetails}
                 onGenerate={onGenerateHealth}
@@ -132,7 +132,7 @@ export const DashboardStatsGrid: React.FC<DashboardStatsGridProps> = ({
           <div {...commonDivProps}>
              {customizeMode && <CustomizeControls />}
             <SciFiCard
-              theme={theme as AppTheme}
+              theme={theme}
               title={t[cardConfig.id]}
               value={`${numberFormatter.format(stats.value)} ${baseCurrency}`}
               icon={meta.icon}

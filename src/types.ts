@@ -24,7 +24,7 @@ import { Project } from './features/projects/types';
 
 // Import new decentralized settings
 export * from './types/settings';
-import { SettingsState } from './types/settings';
+import { SettingsState, AppTheme } from './types/settings';
 
 // --- App State ---
 
@@ -91,7 +91,7 @@ export type AppState = {
   authLoading: boolean;
   
   // UI State
-  theme: any; // Typed via imports in usage
+  theme: AppTheme;
   lang: LangCode;
   currency: CurrencyCode;
   sidebarWidth: number;

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { WebhookConfig, AppEventType } from '../../../types';
+import { WebhookConfig, AppEventType, AppTheme } from '../../../types';
 import { useDraggableAndResizable } from '../../../hooks/useDraggableAndResizable';
 import { HoloButton } from '../../../components/ui/HoloButton';
 import { X, Save, Globe, Key, Tag } from 'lucide-react';
@@ -13,7 +13,7 @@ interface WebhookFormModalProps {
     onClose: () => void;
     onSave: (webhook: WebhookConfig) => void;
     t: Record<string, string>;
-    theme: 'light' | 'dark';
+    theme: AppTheme;
     lang: 'ar' | 'en';
 }
 
@@ -27,7 +27,7 @@ const AVAILABLE_EVENTS: { id: AppEventType, label: string }[] = [
 ];
 
 export const WebhookFormModal: React.FC<WebhookFormModalProps> = ({ webhook, onClose, onSave, t, theme, lang }) => {
-    const isDark = theme === 'dark';
+    const isDark = theme.startsWith('dark');
     const { modalRef, headerRef, position, size, handleDragStart } = useDraggableAndResizable({ initialSize: { width: 600, height: 650 } });
 
     const [formData, setFormData] = useState<WebhookConfig>(webhook || {

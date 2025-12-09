@@ -9,19 +9,21 @@ import { ProfitAndLossChart } from './ProfitAndLossChart';
 import { SegmentedControl } from '../../../components/ui/SegmentedControl';
 import { useQuery } from '@tanstack/react-query';
 import { reportService } from '../../../services/reportService';
+import { AppTheme } from '../../../types';
 
 const CategoryBreakdownItem: React.FC<{
   label: string;
   amount: number;
   percentage: number;
   currency: string;
-  theme: 'light' | 'dark';
+  theme: AppTheme;
   type: 'income' | 'expense';
 }> = ({ label, amount, percentage, currency, theme, type }) => {
   const isIncome = type === 'income';
+  const isDark = theme.startsWith('dark');
   const barColor = isIncome ? 'bg-emerald-500' : 'bg-orange-500';
-  const textColor = theme === 'dark' ? 'text-gray-200' : 'text-slate-800';
-  const bgColor = theme === 'dark' ? 'bg-gray-800' : 'bg-slate-100';
+  const textColor = isDark ? 'text-gray-200' : 'text-slate-800';
+  const bgColor = isDark ? 'bg-gray-800' : 'bg-slate-100';
 
   return (
     <div className="mb-4 last:mb-0">
@@ -50,27 +52,10 @@ export const ProfitAndLossReport: React.FC = () => {
     currentCompany: state.currentCompany,
   }));
   const t = translations[lang];
-  const isDark = theme === 'dark';
+  const isDark = theme.startsWith('dark');
 
   const [dateRange, setDateRange] = useState('thisMonth');
   const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart');
-
-  const { startDate, endDate } = useMemo(() => {
-    const now = new Date();
-    let start: Date | undefined;
-    let end: Date | undefined;
-
-    if (dateRange === 'thisMonth') {
-      start = new Date(now.getFullYear(), now.getMonth(), 1);
-      end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    } else if (dateRange === 'last30days') {
-      start = new Date();
-      start.setDate(now.getDate() - 30);
-      end = now;
-    }
-    // 'allTime' leaves start/end undefined
-    return { startDate: start, endDate: end };
-  }, [dateRange]);
 
   // Note: currently using getIncomeStatement without date params because backend View handles totals.
   // Future enhancement: Create RPC for filtered PnL.

@@ -25,7 +25,7 @@ const logger = {
 const FallbackComponent: React.FC<{ onRefresh: () => void, onHome: () => void, error: Error | null }> = ({ onRefresh, onHome, error }) => {
     const { lang, theme } = useZustandStore(state => ({ lang: state.lang, theme: state.theme }));
     const t = translations[lang] || translations['ar'];
-    const isDark = theme === 'dark';
+    const isDark = theme.startsWith('dark');
 
     return (
         <div className={`min-h-screen flex items-center justify-center p-4 ${isDark ? 'bg-gray-900 text-white' : 'bg-slate-50 text-slate-900'}`}>

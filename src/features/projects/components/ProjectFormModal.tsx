@@ -30,6 +30,7 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({ project, onC
         initialSize: { width: 600, height: 650 }
     });
     const isEdit = !!project;
+    const isDark = theme.startsWith('dark');
 
     const [formData, setFormData] = useState<Partial<Project>>(project || {
         name: '',
@@ -75,11 +76,11 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({ project, onC
             <div
                 ref={modalRef}
                 style={{ ...position, ...size }}
-                className={`fixed rounded-2xl shadow-2xl flex flex-col ${theme === 'dark' ? 'bg-gray-900 border-2 border-cyan-500/50' : 'bg-white border'}`}
+                className={`fixed rounded-2xl shadow-2xl flex flex-col ${isDark ? 'bg-gray-900 border-2 border-cyan-500/50' : 'bg-white border'}`}
                 onMouseDown={e => e.stopPropagation()}
             >
-                <div ref={headerRef} onMouseDown={handleDragStart} className="p-4 border-b border-gray-700 cursor-move flex justify-between items-center">
-                    <h3 className="text-lg font-bold">{isEdit ? t.editProject : t.addProject}</h3>
+                <div ref={headerRef} onMouseDown={handleDragStart} className={`p-4 border-b flex items-center justify-between cursor-move ${isDark ? 'border-gray-700' : 'border-slate-200'}`}>
+                    <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{isEdit ? t.editProject : t.addProject}</h3>
                     <button onClick={onClose}><X /></button>
                 </div>
                 <div className="flex-1 p-6 space-y-4 overflow-y-auto">
@@ -119,8 +120,8 @@ export const ProjectFormModal: React.FC<ProjectFormModalProps> = ({ project, onC
                         </div>
                     </div>
                 </div>
-                <div className="p-4 border-t border-gray-700 flex justify-end gap-3">
-                    <button onClick={onClose} className="px-4 py-2 rounded-lg bg-gray-800">{t.cancel}</button>
+                <div className={`p-4 border-t flex justify-end gap-3 ${isDark ? 'border-gray-700' : 'border-slate-200'}`}>
+                    <button onClick={onClose} className={`px-4 py-2 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-slate-200'}`}>{t.cancel}</button>
                     <HoloButton icon={isSaving ? Loader : Save} variant="success" onClick={handleSubmit} disabled={isSaving}>
                         {isSaving ? 'جاري الحفظ...' : t.save}
                     </HoloButton>

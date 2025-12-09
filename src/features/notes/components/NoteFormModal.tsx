@@ -1,5 +1,7 @@
+
 import React, { useState } from 'react';
 import { Note, NoteCategory, NotePriority, NoteStatus } from '../../../types';
+import { AppTheme } from '../../../types';
 import { useDraggableAndResizable } from '../../../hooks/useDraggableAndResizable';
 import { CATEGORY_CONFIG, NOTE_COLORS } from '../lib/utils';
 import { HoloButton } from '../../../components/ui/HoloButton';
@@ -8,7 +10,7 @@ import { useZustandStore } from '../../../store/useStore';
 
 interface NoteFormModalProps {
   note?: Note;
-  theme: 'light' | 'dark';
+  theme: AppTheme;
   t: Record<string, string>;
   onClose: () => void;
   onSave: (note: Partial<Note>) => Promise<void>;
@@ -21,6 +23,7 @@ export const NoteFormModal: React.FC<NoteFormModalProps> = ({ note, theme, t, on
     lang: state.lang
   }));
   const isEdit = !!note;
+  const isDark = !theme.startsWith('light');
   
   const [formData, setFormData] = useState<Partial<Note>>(note || {
     title: '', content: '', category: 'general', priority: 'medium', status: 'active',
@@ -72,18 +75,18 @@ export const NoteFormModal: React.FC<NoteFormModalProps> = ({ note, theme, t, on
     }
   };
   
-  const formInputClasses = `w-full rounded-lg p-3 border focus:outline-none transition-colors focus:ring-2 focus:ring-cyan-500 ${theme === 'dark' ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-slate-800 border-slate-300'}`;
-  const labelClasses = `block text-sm mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-slate-700'}`;
+  const formInputClasses = `w-full rounded-lg p-3 border focus:outline-none transition-colors focus:ring-2 focus:ring-cyan-500 ${isDark ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-slate-800 border-slate-300'}`;
+  const labelClasses = `block text-sm mb-2 ${isDark ? 'text-gray-300' : 'text-slate-700'}`;
   
   return (
     <div className="fixed inset-0 bg-black/75 z-50" onMouseDown={onClose}>
       <div
         ref={modalRef}
         style={{ left: `${position.x}px`, top: `${position.y}px`, width: `${size.width}px`, height: `${size.height}px` }}
-        className={`fixed rounded-2xl shadow-2xl w-full flex flex-col overflow-hidden ${theme === 'dark' ? 'bg-gray-900 border-2 border-cyan-500/50' : 'bg-white border'}`}
+        className={`fixed rounded-2xl shadow-2xl w-full flex flex-col overflow-hidden ${isDark ? 'bg-gray-900 border-2 border-cyan-500/50' : 'bg-white border'}`}
         onMouseDown={e => e.stopPropagation()}
       >
-        <div ref={headerRef} onMouseDown={handleDragStart} onTouchStart={handleDragStart} className={`p-6 border-b flex items-center justify-between cursor-move ${theme === 'dark' ? 'bg-gray-900 border-gray-700' : 'bg-white border-slate-200'}`}>
+        <div ref={headerRef} onMouseDown={handleDragStart} onTouchStart={handleDragStart} className={`p-6 border-b flex items-center justify-between cursor-move ${isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-slate-200'}`}>
           <h3 className="text-2xl font-bold">{isEdit ? t.editNote : t.addNote}</h3>
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-500/20"><X size={24} /></button>
         </div>
@@ -103,7 +106,7 @@ export const NoteFormModal: React.FC<NoteFormModalProps> = ({ note, theme, t, on
           <div>
             <label className={labelClasses}>{t.projectLink || 'ربط بمشروع'}</label>
             <div className="relative">
-                <Briefcase size={16} className={`absolute top-1/2 -translate-y-1/2 text-gray-400 ${lang === 'ar' ? 'right-3' : 'left-3'}`} />
+                <Briefcase size={16} className={`absolute top-1/2 -translate-y-1/2 text-gray-400 ${lang === 'ar' ? 'right-3' : 'left-3'} pointer-events-none`} />
                 <select value={formData.linkedProject || ''} onChange={e => handleChange('linkedProject', e.target.value || undefined)} className={`${formInputClasses} appearance-none ${lang === 'ar' ? 'pr-10' : 'pl-10'}`}>
                     <option value="">-- {t.none || 'لا يوجد'} --</option>
                     {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -126,7 +129,7 @@ export const NoteFormModal: React.FC<NoteFormModalProps> = ({ note, theme, t, on
           <div>
             <label className={labelClasses}>{t.tags}</label>
             <div className="flex flex-wrap gap-2 items-center">
-              {formData.tags?.map(tag => <div key={tag} className={`flex items-center gap-1 px-2 py-1 rounded text-sm ${theme === 'dark' ? 'bg-gray-700' : 'bg-slate-200'}`}><span>{tag}</span><button onClick={() => removeTag(tag)}><X size={14}/></button></div>)}
+              {formData.tags?.map(tag => <div key={tag} className={`flex items-center gap-1 px-2 py-1 rounded text-sm ${isDark ? 'bg-gray-700' : 'bg-slate-200'}`}><span>{tag}</span><button onClick={() => removeTag(tag)}><X size={14}/></button></div>)}
               <input type="text" value={tagInput} onChange={e => setTagInput(e.target.value)} onKeyDown={handleTagAction} placeholder={t.addTag} className={`${formInputClasses} flex-1 min-w-[150px]`} />
             </div>
           </div>
@@ -147,8 +150,8 @@ export const NoteFormModal: React.FC<NoteFormModalProps> = ({ note, theme, t, on
           </div>
         </div>
 
-        <div className={`flex justify-end gap-3 p-4 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-slate-200'}`}>
-          <button type="button" onClick={onClose} className={`px-6 py-3 rounded-xl font-semibold ${theme === 'dark' ? 'bg-gray-800' : 'bg-slate-200'}`}>{t.cancel}</button>
+        <div className={`flex justify-end gap-3 p-4 border-t ${isDark ? 'border-gray-700' : 'border-slate-200'}`}>
+          <button type="button" onClick={onClose} className={`px-6 py-3 rounded-xl font-semibold ${isDark ? 'bg-gray-800' : 'bg-slate-200'}`}>{t.cancel}</button>
           <HoloButton variant="success" icon={Save} onClick={handleSubmit} disabled={isSaving}>{isSaving ? 'جاري الحفظ...' : (isEdit ? t.saveChanges : t.addNote)}</HoloButton>
         </div>
         <div 

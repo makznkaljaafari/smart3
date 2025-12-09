@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { SectionBox } from '../../../components/ui/SectionBox';
-import { SettingsState, CurrencyCode, ExchangeRate } from '../../../types';
+import { SettingsState, CurrencyCode, ExchangeRate, AppTheme } from '../../../types';
 import { currencyLabels } from '../../../lib/i18n';
 import { getLatestRate } from '../../../lib/currency';
 import { X, Save, ArrowUp, ArrowDown, TrendingUp, Plus, Coins, Loader } from 'lucide-react';
@@ -18,7 +18,7 @@ interface CurrencySettingsProps {
   setLocalSettings: React.Dispatch<React.SetStateAction<SettingsState>>;
   t: Record<string, string>;
   lang: 'ar' | 'en';
-  theme: 'light' | 'dark';
+  theme: AppTheme;
 }
 
 const formatDate = (dateString?: string) => {
@@ -27,7 +27,7 @@ const formatDate = (dateString?: string) => {
 };
 
 export const CurrencySettings: React.FC<CurrencySettingsProps> = ({ localSettings, setLocalSettings, t, lang, theme }) => {
-  const isDark = theme === 'dark';
+  const isDark = theme.startsWith('dark');
   const { addToast, currentCompany } = useZustandStore(state => ({ 
       addToast: state.addToast,
       currentCompany: state.currentCompany

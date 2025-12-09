@@ -1,14 +1,15 @@
+
 import React from 'react';
 import { SectionBox } from '../../../components/ui/SectionBox';
 import { Toggle } from '../../../components/ui/Toggle';
-import { SettingsState, DashboardCardConfig, DashboardCardColor } from '../../../types';
+import { SettingsState, DashboardCardConfig, DashboardCardColor, AppTheme } from '../../../types';
 import { cardMetaData } from '../../dashboard/lib/dashboardUtils';
 
 interface DashboardSettingsProps {
   localSettings: SettingsState;
   setLocalSettings: React.Dispatch<React.SetStateAction<SettingsState>>;
   t: Record<string, string>;
-  theme: 'light' | 'dark';
+  theme: AppTheme;
 }
 
 const accentColors: DashboardCardColor[] = ['primary', 'cyan', 'purple', 'green', 'orange', 'red', 'yellow'];
@@ -23,6 +24,7 @@ const colorMap: Record<DashboardCardColor, string> = {
 };
 
 export const DashboardSettings: React.FC<DashboardSettingsProps> = ({ localSettings, setLocalSettings, t, theme }) => {
+    const isDark = theme.startsWith('dark');
 
     const handleCardChange = (id: DashboardCardConfig['id'], key: keyof DashboardCardConfig, value: any) => {
         setLocalSettings(prev => {
@@ -35,7 +37,7 @@ export const DashboardSettings: React.FC<DashboardSettingsProps> = ({ localSetti
 
     return (
         <SectionBox title={t.dashboardCards} theme={theme}>
-            <p className={`text-xs mb-6 ${theme === 'dark' ? 'text-gray-400' : 'text-slate-500'}`}>
+            <p className={`text-xs mb-6 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
                 {t.dashboardSettingsDescription}
             </p>
             <div className="space-y-4">
@@ -44,10 +46,10 @@ export const DashboardSettings: React.FC<DashboardSettingsProps> = ({ localSetti
                     if (!meta) return null;
                     const Icon = meta.icon;
                     return (
-                        <div key={card.id} className={`p-4 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${theme === 'dark' ? 'bg-gray-800/50' : 'bg-slate-100'}`}>
+                        <div key={card.id} className={`p-4 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${isDark ? 'bg-gray-800/50' : 'bg-slate-100'}`}>
                             <div className="flex items-center gap-3">
-                                <Icon size={24} className={theme === 'dark' ? 'text-cyan-300' : 'text-cyan-600'} />
-                                <span className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>{t[card.id]}</span>
+                                <Icon size={24} className={isDark ? 'text-cyan-300' : 'text-cyan-600'} />
+                                <span className={`font-semibold ${isDark ? 'text-white' : 'text-slate-800'}`}>{t[card.id]}</span>
                             </div>
                             <div className="flex items-center gap-4">
                                 <div className="flex items-center gap-2">
@@ -55,7 +57,7 @@ export const DashboardSettings: React.FC<DashboardSettingsProps> = ({ localSetti
                                         <button 
                                             key={color}
                                             onClick={() => handleCardChange(card.id, 'color', color)}
-                                            className={`w-6 h-6 rounded-full bg-gradient-to-br transition-all duration-200 ${colorMap[color]} ${card.color === color ? 'ring-2 ring-offset-2 ring-white ' + (theme === 'dark' ? 'ring-offset-gray-800' : 'ring-offset-slate-100') : 'hover:scale-110'}`}
+                                            className={`w-6 h-6 rounded-full bg-gradient-to-br transition-all duration-200 ${colorMap[color]} ${card.color === color ? 'ring-2 ring-offset-2 ring-white ' + (isDark ? 'ring-offset-gray-800' : 'ring-offset-slate-100') : 'hover:scale-110'}`}
                                             aria-label={`Set color to ${color}`}
                                         />
                                     ))}

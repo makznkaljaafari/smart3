@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
 import { formatCurrency } from '../../expenses/lib/utils';
 import { useZustandStore } from '../../../store/useStore';
 import { translations } from '../../../lib/i18n';
+import { AppTheme } from '../../../types';
 
 interface PieChartData {
   label: string;
@@ -12,7 +14,7 @@ interface PieChartData {
 interface PieChartProps {
   data: PieChartData[];
   size?: number;
-  theme: 'light' | 'dark';
+  theme: AppTheme;
 }
 
 interface TooltipState {
@@ -102,6 +104,8 @@ export const PieChart: React.FC<PieChartProps> = ({ data, size = 300, theme }) =
     );
   });
 
+  const isDark = theme.startsWith('dark');
+
   return (
     <div className="flex flex-col md:flex-row items-center gap-6 relative">
       <div className="relative" style={{ width: size, height: size }}>
@@ -109,8 +113,8 @@ export const PieChart: React.FC<PieChartProps> = ({ data, size = 300, theme }) =
             {slices}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <span className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-slate-500'}`}>{t.total || 'Total'}</span>
-            <span className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+            <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>{t.total || 'Total'}</span>
+            <span className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>
                 {formatCurrency(total, currency)}
             </span>
         </div>

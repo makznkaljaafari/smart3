@@ -9,8 +9,6 @@ import { SciFiCard } from '../../../components/ui/SciFiCard';
 import { HoloButton } from '../../../components/ui/HoloButton';
 import { useNavigate } from 'react-router-dom';
 import { formatCurrency } from '../lib/utils';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 export const AccountingAuditView: React.FC = () => {
     const { theme, lang, settings, currentCompany } = useZustandStore();
@@ -31,6 +29,10 @@ export const AccountingAuditView: React.FC = () => {
         setIsExporting(true);
         
         try {
+            // Dynamic imports for heavy libraries
+            const html2canvas = (await import('html2canvas')).default;
+            const jsPDF = (await import('jspdf')).default;
+
             const element = reportRef.current;
             // Force specific background for capture to avoid transparency issues
             const originalBg = element.style.backgroundColor;

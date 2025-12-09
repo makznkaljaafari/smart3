@@ -4,11 +4,11 @@ import { SectionBox } from '../../../components/ui/SectionBox';
 import { HoloButton } from '../../../components/ui/HoloButton';
 import { LS_KEY, useZustandStore } from '../../../store/useStore';
 import { Download, Upload, Trash2, AlertTriangle, UploadCloud, DownloadCloud, Loader } from 'lucide-react';
-import { Toast } from '../../../types';
+import { Toast, AppTheme } from '../../../types';
 
 interface DataSettingsProps {
   t: Record<string, string>;
-  theme: 'light' | 'dark';
+  theme: AppTheme;
 }
 
 export const DataSettings: React.FC<DataSettingsProps> = ({ t, theme }) => {
@@ -81,7 +81,7 @@ export const DataSettings: React.FC<DataSettingsProps> = ({ t, theme }) => {
   return (
     <>
       <SectionBox title={t.cloudBackup} theme={theme}>
-        <p className={`text-xs mb-4 ${theme === 'dark' ? 'text-gray-400' : 'text-slate-500'}`}>
+        <p className={`text-xs mb-4 ${theme.startsWith('dark') ? 'text-gray-400' : 'text-slate-500'}`}>
           {t.cloudBackupDescription}
         </p>
         <div className="flex gap-3">
@@ -111,7 +111,7 @@ export const DataSettings: React.FC<DataSettingsProps> = ({ t, theme }) => {
       </SectionBox>
       <div className="mt-6">
         <SectionBox title={t.localBackup} theme={theme}>
-            <p className={`text-xs mb-4 ${theme === 'dark' ? 'text-gray-400' : 'text-slate-500'}`}>
+            <p className={`text-xs mb-4 ${theme.startsWith('dark') ? 'text-gray-400' : 'text-slate-500'}`}>
                 {t.localBackupDescription}
             </p>
             <div className="flex gap-3">
@@ -135,7 +135,7 @@ export const DataSettings: React.FC<DataSettingsProps> = ({ t, theme }) => {
       <div className="mt-6">
         <SectionBox title={t.dangerZone} theme={theme}>
           <div className={`p-4 rounded-lg border flex flex-col md:flex-row items-start md:items-center justify-between gap-4 
-            ${theme === 'dark' ? 'bg-red-500/10 border-red-500/30 text-red-300' : 'bg-red-50 border-red-200 text-red-800'}`}>
+            ${theme.startsWith('dark') ? 'bg-red-500/10 border-red-500/30 text-red-300' : 'bg-red-50 border-red-200 text-red-800'}`}>
             <div>
               <h4 className="font-bold flex items-center gap-2"><AlertTriangle /> {t.deleteAllData}</h4>
               <p className="text-xs mt-1">{t.deleteAllDataWarning}</p>

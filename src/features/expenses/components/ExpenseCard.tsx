@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Expense } from '../../../types';
+import { Expense, AppTheme } from '../../../types';
 import { getStatusLabel, getPriorityLabel, formatCurrency, formatShortDate, CATEGORY_CONFIG } from '../lib/utils';
 import { Eye, Edit2, Trash2, MoreVertical, Paperclip, RefreshCw, DollarSign, Building } from 'lucide-react';
 import { useZustandStore } from '../../../store/useStore';
@@ -11,13 +12,13 @@ interface ExpenseCardProps {
   onEdit: (e: Expense) => void;
   onDelete: (id: string) => void;
   onPay: (e: Expense) => void;
-  theme: 'light' | 'dark';
+  theme: AppTheme;
 }
 
 export const ExpenseCard: React.FC<ExpenseCardProps> = ({ expense, onViewDetails, onEdit, onDelete, onPay, theme }) => {
   const [showMenu, setShowMenu] = useState(false);
   const settings = useZustandStore(state => state.settings);
-  const isDark = theme === 'dark';
+  const isDark = !theme.startsWith('light');
   const isPayable = expense.status === 'pending' || expense.status === 'approved';
 
   const categoryConfig = CATEGORY_CONFIG[expense.category];

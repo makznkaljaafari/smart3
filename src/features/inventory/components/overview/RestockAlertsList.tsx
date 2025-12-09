@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Package } from 'lucide-react';
+import { AppTheme } from '../../../../types';
 
 interface RestockItem {
     id: string;
@@ -12,12 +13,12 @@ interface RestockItem {
 
 interface RestockAlertsListProps {
   items: RestockItem[];
-  theme: string;
+  theme: AppTheme;
   t: Record<string, string>;
 }
 
 export const RestockAlertsList: React.FC<RestockAlertsListProps> = ({ items, theme, t }) => {
-  const isDark = theme === 'dark';
+  const isDark = !theme.startsWith('light');
 
   return (
     <div className="space-y-3">

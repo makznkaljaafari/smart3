@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { PurchaseInvoice } from '../../../types';
+import { PurchaseInvoice } from '../../../../types';
 import { Building, Calendar, CreditCard, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useZustandStore } from '../../../../store/useStore';
 
@@ -11,7 +11,7 @@ interface PurchaseInfoSectionProps {
 
 export const PurchaseInfoSection: React.FC<PurchaseInfoSectionProps> = ({ purchase, t }) => {
   const { theme, lang } = useZustandStore(state => ({ theme: state.theme, lang: state.lang }));
-  const isDark = theme === 'dark';
+  const isDark = !theme.startsWith('light');
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

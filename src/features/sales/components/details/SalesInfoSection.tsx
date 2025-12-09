@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SalesInvoice } from '../../../types';
+import { SalesInvoice } from '../../../../types';
 import { User, Calendar, Hash, FileText, CheckCircle2, AlertOctagon, X, Car } from 'lucide-react';
 import { useZustandStore } from '../../../../store/useStore';
 

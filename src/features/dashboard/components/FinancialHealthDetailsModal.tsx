@@ -1,14 +1,15 @@
+
 import React from 'react';
 import { useDraggableAndResizable } from '../../../hooks/useDraggableAndResizable';
 import { HoloButton } from '../../../components/ui/HoloButton';
 import { X, HeartPulse } from 'lucide-react';
-// FIX: Add missing import for 'marked' library
 import { marked } from 'marked';
+import { AppTheme } from '../../../types';
 
 interface FinancialHealthDetailsModalProps {
   analysis: string;
   onClose: () => void;
-  theme: 'light' | 'dark';
+  theme: AppTheme;
   t: Record<string, any>;
 }
 
@@ -17,19 +18,21 @@ export const FinancialHealthDetailsModal: React.FC<FinancialHealthDetailsModalPr
     initialSize: { width: 640, height: 500 },
     minSize: { width: 500, height: 400 }
   });
+  
+  const isDark = !theme.startsWith('light');
 
   return (
     <div className="fixed inset-0 bg-black/75 z-50" onMouseDown={onClose}>
       <div
         ref={modalRef}
         style={{ left: `${position.x}px`, top: `${position.y}px`, width: `${size.width}px`, height: `${size.height}px` }}
-        className={`fixed rounded-2xl shadow-2xl w-full flex flex-col overflow-hidden ${theme === 'dark' ? 'bg-gray-900 border-2 border-cyan-500/50' : 'bg-white border'}`}
+        className={`fixed rounded-2xl shadow-2xl w-full flex flex-col overflow-hidden ${isDark ? 'bg-gray-900 border-2 border-cyan-500/50' : 'bg-white border'}`}
         onMouseDown={e => e.stopPropagation()}
       >
         <div
           ref={headerRef}
           onMouseDown={handleDragStart}
-          className={`p-6 border-b flex items-center justify-between cursor-move ${theme === 'dark' ? 'border-gray-700' : 'border-slate-200'}`}
+          className={`p-6 border-b flex items-center justify-between cursor-move ${isDark ? 'border-gray-700' : 'border-slate-200'}`}
         >
           <h3 className="text-xl font-bold flex items-center gap-2">
             <HeartPulse className="text-cyan-400" />
@@ -45,7 +48,7 @@ export const FinancialHealthDetailsModal: React.FC<FinancialHealthDetailsModalPr
           />
         </div>
 
-        <div className={`flex justify-end gap-3 p-4 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-slate-200'}`}>
+        <div className={`flex justify-end gap-3 p-4 border-t ${isDark ? 'border-gray-700' : 'border-slate-200'}`}>
           <HoloButton variant="primary" onClick={onClose}>{t.close}</HoloButton>
         </div>
 

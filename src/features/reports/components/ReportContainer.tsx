@@ -1,8 +1,11 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { useZustandStore } from '../../../store/useStore';
 import { HoloButton } from '../../../components/ui/HoloButton';
-import { Printer, Download, Send, Cpu } from 'lucide-react';
+import { Printer, Download, Send, Cpu, Loader } from 'lucide-react';
 import { translations } from '../../../lib/i18n';
+import { PrintPreviewModal } from './PrintPreviewModal';
+
 
 interface ReportContainerProps {
   title: string;
@@ -20,12 +23,74 @@ export const ReportContainer: React.FC<ReportContainerProps> = ({ title, childre
       settings: state.settings 
   }));
   const t = translations[lang];
-  const { companyProfile } = settings;
+  const { companyProfile, appearance } = settings;
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [showPrintPreview, setShowPrintPreview] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    setIsGeneratingPdf(true);
+    const reportElement = document.querySelector('.printable-report-container') as HTMLElement;
+    if (!reportElement) {
+        setIsGeneratingPdf(false);
+        return;
+    }
+
+    document.body.classList.add('pdf-generation-mode');
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    try {
+        // Dynamic import to reduce initial bundle size
+        const html2canvas = (await import('html2canvas')).default;
+        const jsPDF = (await import('jspdf')).default;
+
+        const canvas = await html2canvas(reportElement, {
+            scale: 2,
+            useCORS: true,
+            scrollY: -window.scrollY,
+            windowWidth: document.documentElement.offsetWidth,
+            windowHeight: document.documentElement.offsetHeight,
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+        const ratio = canvasWidth / canvasHeight;
+        
+        const imgWidth = pdfWidth;
+        const imgHeight = imgWidth / ratio;
+        
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+
+        while (heightLeft > 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pdfHeight;
+        }
+        
+        pdf.save(`${title.replace(/\s/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+
+    } catch (error) {
+        console.error("Error generating PDF:", error);
+        // In a real app, you might want a toast notification here
+    } finally {
+        document.body.classList.remove('pdf-generation-mode');
+        setIsGeneratingPdf(false);
+    }
+  };
 
   return (
-    <div className="printable-report-container">
-      {/* This header is only for printing */}
-      <div className="print-header">
+    <>
+      <div className="printable-report-container">
+       <div className="print-header hidden" style={{ borderBottomColor: appearance.documentAccentColor || '#333' }}>
           <div className="flex justify-between items-start">
               <div className="flex items-center gap-4">
                   {companyProfile.logoUrl ? (
@@ -42,7 +107,7 @@ export const ReportContainer: React.FC<ReportContainerProps> = ({ title, childre
                   </div>
               </div>
               <div className="text-right">
-                  <h2 className="font-bold text-2xl">{title}</h2>
+                  <h2 className="font-bold text-2xl" style={{ color: appearance.documentAccentColor || 'black' }}>{title}</h2>
                   <p className="text-sm text-gray-600">Generated on: {new Date().toLocaleDateString()}</p>
               </div>
           </div>
@@ -55,7 +120,11 @@ export const ReportContainer: React.FC<ReportContainerProps> = ({ title, childre
             {filters}
             <div className="flex gap-2">
               {onSend && <HoloButton variant="secondary" onClick={onSend}><Send size={18} /> {t.send}</HoloButton>}
-              {onPrint && <HoloButton variant="secondary" onClick={onPrint}><Printer size={18} /> {t.print}</HoloButton>}
+              <HoloButton variant="secondary" onClick={() => setShowPrintPreview(true)}><Printer size={18} /> {t.print}</HoloButton>
+              <HoloButton variant="secondary" onClick={handleDownloadPdf} disabled={isGeneratingPdf}>
+                {isGeneratingPdf ? <Loader size={18} className="animate-spin" /> : <Download size={18} />}
+                {isGeneratingPdf ? t.saving : t.downloadPDF}
+              </HoloButton>
               {onExport && <HoloButton variant="primary" onClick={onExport}><Download size={18} /> {t.exportCsv}</HoloButton>}
             </div>
           </div>
@@ -65,10 +134,16 @@ export const ReportContainer: React.FC<ReportContainerProps> = ({ title, childre
         </div>
       </div>
       
-      {/* This footer is only for printing */}
-      <div className="print-footer">
-          Page <span className="page-number"></span>
+      <div className="print-footer hidden">
+          {companyProfile.footerText && <div className="footer-custom-text">{companyProfile.footerText}</div>}
+          <span className="page-number"></span>
       </div>
     </div>
+    {showPrintPreview && (
+        <PrintPreviewModal title={title} onClose={() => setShowPrintPreview(false)}>
+            {children}
+        </PrintPreviewModal>
+    )}
+    </>
   );
 };

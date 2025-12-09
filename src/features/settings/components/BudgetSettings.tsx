@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { SectionBox } from '../../../components/ui/SectionBox';
-import { SettingsState, Budget, ExpenseCategory } from '../../../types';
+import { SettingsState, Budget, ExpenseCategory, AppTheme } from '../../../types';
 import { CATEGORY_CONFIG } from '../../expenses/lib/utils';
 import { Brain, Loader } from 'lucide-react';
 import { HoloButton } from '../../../components/ui/HoloButton';
@@ -16,7 +16,7 @@ interface BudgetSettingsProps {
   localSettings: SettingsState;
   setLocalSettings: React.Dispatch<React.SetStateAction<SettingsState>>;
   t: Record<string, string>;
-  theme: 'light' | 'dark';
+  theme: AppTheme;
   lang: 'ar' | 'en';
 }
 
@@ -26,6 +26,8 @@ export const BudgetSettings: React.FC<BudgetSettingsProps> = ({ localSettings, s
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [suggestedBudgets, setSuggestedBudgets] = useState<Record<ExpenseCategory, number> | null>(null);
   const [isSuggestionModalOpen, setIsSuggestionModalOpen] = useState(false);
+  
+  const isDark = theme.startsWith('dark');
 
   const { data: expenseStats } = useQuery({
         queryKey: ['expenseStats', currentCompany?.id],
@@ -132,7 +134,7 @@ export const BudgetSettings: React.FC<BudgetSettingsProps> = ({ localSettings, s
   };
 
 
-  const inputClasses = theme === 'dark'
+  const inputClasses = isDark
     ? 'bg-gray-800 text-white border-gray-700 placeholder:text-gray-500'
     : 'bg-slate-50 text-slate-900 border-slate-300 placeholder:text-slate-400';
 
@@ -140,7 +142,7 @@ export const BudgetSettings: React.FC<BudgetSettingsProps> = ({ localSettings, s
     <>
       <SectionBox title={t.currentMonthBudgets} theme={theme}>
         <div className="flex justify-between items-center mb-4">
-            <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-slate-500'}`}>
+            <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
               {t.setBudgetsDescription}
             </p>
             <HoloButton icon={isSuggesting ? Loader : Brain} onClick={handleSuggest} disabled={isSuggesting} className={isSuggesting ? 'animate-pulse' : ''} variant="secondary">
@@ -153,7 +155,7 @@ export const BudgetSettings: React.FC<BudgetSettingsProps> = ({ localSettings, s
             const currentBudget = localSettings.budgets?.find(b => b.month === currentMonth && b.category === categoryKey);
             const CategoryIcon = config.icon;
             return (
-              <div key={categoryKey} className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-800/50' : 'bg-slate-100'}`}>
+              <div key={categoryKey} className={`p-4 rounded-lg ${isDark ? 'bg-gray-800/50' : 'bg-slate-100'}`}>
                 <div className="flex items-center gap-2 mb-2">
                   <CategoryIcon size={18} className={config.color.replace('600', '400')} />
                   <label className="font-semibold">{config.label}</label>

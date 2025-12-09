@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Expense } from '../../../types';
+import { AppTheme } from '../../../types';
 import { getStatusLabel, getPriorityLabel, formatCurrency, formatShortDate, CATEGORY_CONFIG, getStatusClass, getPriorityClass } from '../lib/utils';
 import { Eye, Edit2, Trash2, Paperclip, RefreshCw, DollarSign } from 'lucide-react';
 import { useZustandStore } from '../../../store/useStore';
@@ -12,12 +13,12 @@ interface ExpenseRowProps {
   onEdit: (e: Expense) => void;
   onDelete: (id: string) => void;
   onPay: (e: Expense) => void;
-  theme: 'light' | 'dark';
+  theme: AppTheme;
 }
 
 export const ExpenseRow: React.FC<ExpenseRowProps> = React.memo(({ expense, onViewDetails, onEdit, onDelete, onPay, theme }) => {
   const settings = useZustandStore(state => state.settings);
-  const isDark = theme === 'dark';
+  const isDark = theme.startsWith('dark');
   const categoryConfig = CATEGORY_CONFIG[expense.category];
   const CategoryIcon = categoryConfig.icon;
   

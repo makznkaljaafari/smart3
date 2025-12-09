@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { useDraggableAndResizable } from '../../../hooks/useDraggableAndResizable';
 import { HoloButton } from '../../../components/ui/HoloButton';
-import { SettingsState } from '../../../types';
+import { SettingsState, AppTheme } from '../../../types';
 import { X, Save, Zap } from 'lucide-react';
 
 interface IntegrationModalProps {
@@ -11,7 +12,7 @@ interface IntegrationModalProps {
     onSave: (type: 'whatsapp' | 'telegram', data: Partial<SettingsState['integrations']>) => void;
     onTest: (settings: SettingsState['integrations']) => Promise<void>;
     initialData: SettingsState['integrations'];
-    theme: 'light' | 'dark';
+    theme: AppTheme;
     t: Record<string, string>;
 }
 
@@ -24,6 +25,7 @@ export const IntegrationModal: React.FC<IntegrationModalProps> = ({
     });
     
     const [formData, setFormData] = useState(initialData);
+    const isDark = !theme.startsWith('light');
 
     const handleSave = () => {
         let dataToSave: Partial<SettingsState['integrations']> = {};
@@ -41,8 +43,8 @@ export const IntegrationModal: React.FC<IntegrationModalProps> = ({
         onSave(integrationType, dataToSave);
     };
     
-    const formInputClasses = `w-full rounded-lg p-3 border focus:outline-none transition-colors focus:ring-2 focus:ring-cyan-500 ${theme === 'dark' ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-slate-800 border-slate-300'}`;
-    const labelClasses = `block text-sm mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-slate-700'}`;
+    const formInputClasses = `w-full rounded-lg p-3 border focus:outline-none transition-colors focus:ring-2 focus:ring-cyan-500 ${isDark ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-slate-800 border-slate-300'}`;
+    const labelClasses = `block text-sm mb-2 ${isDark ? 'text-gray-300' : 'text-slate-700'}`;
 
     if (!isOpen) return null;
 
@@ -51,17 +53,17 @@ export const IntegrationModal: React.FC<IntegrationModalProps> = ({
             <div
                 ref={modalRef}
                 style={{ left: `${position.x}px`, top: `${position.y}px`, width: `${size.width}px`, height: `${size.height}px` }}
-                className={`fixed rounded-2xl shadow-2xl w-full flex flex-col ${theme === 'dark' ? 'bg-gray-900 border-2 border-cyan-500/50' : 'bg-white border'}`}
+                className={`fixed rounded-2xl shadow-2xl w-full flex flex-col ${isDark ? 'bg-gray-900 border-2 border-cyan-500/50' : 'bg-white border'}`}
                 onMouseDown={(e) => e.stopPropagation()}
             >
                 <div
                     ref={headerRef}
                     onMouseDown={handleDragStart}
                     onTouchStart={handleDragStart}
-                    className={`p-6 border-b flex items-center justify-between cursor-move ${theme === 'dark' ? 'bg-gray-900 border-gray-700' : 'bg-white border-slate-200'}`}
+                    className={`p-6 border-b flex items-center justify-between cursor-move ${isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-slate-200'}`}
                 >
-                    <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{t.configure} {t[integrationType]}</h3>
-                    <button onClick={onClose} className={`p-2 rounded-lg ${theme === 'dark' ? 'hover:bg-gray-800' : 'hover:bg-slate-200'} transition-colors`}><X size={24} /></button>
+                    <h3 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{t.configure} {t[integrationType]}</h3>
+                    <button onClick={onClose} className={`p-2 rounded-lg ${isDark ? 'hover:bg-gray-800' : 'hover:bg-slate-200'} transition-colors`}><X size={24} /></button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -92,10 +94,10 @@ export const IntegrationModal: React.FC<IntegrationModalProps> = ({
                     )}
                 </div>
 
-                <div className={`flex justify-between items-center gap-3 p-4 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-slate-200'}`}>
+                <div className={`flex justify-between items-center gap-3 p-4 border-t ${isDark ? 'border-gray-700' : 'border-slate-200'}`}>
                     <HoloButton variant="secondary" icon={Zap} onClick={() => onTest(formData)}>{t.testConnection}</HoloButton>
                     <div className="flex gap-3">
-                        <button type="button" onClick={onClose} className={`px-6 py-3 rounded-xl font-semibold ${theme === 'dark' ? 'bg-gray-800' : 'bg-slate-200'}`}>{t.cancel}</button>
+                        <button type="button" onClick={onClose} className={`px-6 py-3 rounded-xl font-semibold ${isDark ? 'bg-gray-800' : 'bg-slate-200'}`}>{t.cancel}</button>
                         <HoloButton variant="success" icon={Save} onClick={handleSave}>{t.saveChanges}</HoloButton>
                     </div>
                 </div>

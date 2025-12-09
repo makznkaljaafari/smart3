@@ -1,11 +1,13 @@
+
 import React from 'react';
 import { Note } from '../../../types';
+import { AppTheme } from '../../../types';
 import { getPriorityLabel, getStatusLabel, formatShortDate, CATEGORY_CONFIG, getPriorityClass, getStatusClass } from '../lib/utils';
 import { Pin, Star, Edit2, Trash2, Eye, SortAsc, SortDesc } from 'lucide-react';
 
 interface NoteTableProps {
   notes: Note[];
-  theme: 'light' | 'dark';
+  theme: AppTheme;
   lang: 'ar' | 'en';
   sort: { field: string; order: 'asc' | 'desc' };
   onSort: (field: string) => void;
@@ -17,6 +19,7 @@ interface NoteTableProps {
 
 export const NoteTable: React.FC<NoteTableProps> = ({ notes, theme, lang, sort, onSort, onView, onEdit, onDelete, onToggle }) => {
   const SortIcon = sort.order === 'asc' ? SortAsc : SortDesc;
+  const isDark = !theme.startsWith('light');
   
   const headerClasses = `p-4 font-semibold cursor-pointer hover:bg-[rgb(var(--bg-tertiary-rgb))]`;
   
@@ -38,7 +41,7 @@ export const NoteTable: React.FC<NoteTableProps> = ({ notes, theme, lang, sort, 
           {notes.map(note => {
             const categoryConfig = CATEGORY_CONFIG[note.category];
             const CategoryIcon = categoryConfig.icon;
-            const noteColorStyle = theme === 'dark' 
+            const noteColorStyle = isDark 
                 ? { backgroundColor: note.color || undefined }
                 : { backgroundColor: note.color ? note.color.replace('33', '80') : undefined };
 

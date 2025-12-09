@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Warehouse } from '../../../types';
 import { HoloButton } from '../../../components/ui/HoloButton';
@@ -44,25 +45,25 @@ export const WarehouseFormModal: React.FC<WarehouseFormModalProps> = ({ warehous
     }
   };
 
-  const formInputClasses = `w-full rounded-lg p-3 border focus:outline-none transition-colors focus:ring-2 focus:ring-cyan-500 ${theme === 'dark' ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-slate-800 border-slate-300'}`;
-  const labelClasses = `block text-sm mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-slate-700'}`;
+  const formInputClasses = `w-full rounded-lg p-3 border focus:outline-none transition-colors focus:ring-2 focus:ring-cyan-500 ${theme.startsWith('dark') ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-slate-800 border-slate-300'}`;
+  const labelClasses = `block text-sm mb-2 ${theme.startsWith('dark') ? 'text-gray-300' : 'text-slate-700'}`;
 
   return (
     <div className="fixed inset-0 bg-black/75 z-50" onMouseDown={onClose}>
       <div
         ref={modalRef}
         style={{ left: `${position.x}px`, top: `${position.y}px`, width: `${size.width}px`, height: `${size.height}px` }}
-        className={`fixed rounded-2xl shadow-2xl flex flex-col ${theme === 'dark' ? 'bg-gray-900 border-2 border-cyan-500/50' : 'bg-white border'}`}
+        className={`fixed rounded-2xl shadow-2xl flex flex-col ${theme.startsWith('dark') ? 'bg-gray-900 border-2 border-cyan-500/50' : 'bg-white border'}`}
         onMouseDown={e => e.stopPropagation()}
       >
-        <div ref={headerRef} onMouseDown={handleDragStart} className={`p-6 border-b flex items-center justify-between cursor-move ${theme === 'dark' ? 'border-gray-700' : 'border-slate-200'}`}>
+        <div ref={headerRef} onMouseDown={handleDragStart} className={`p-6 border-b flex items-center justify-between cursor-move ${theme.startsWith('dark') ? 'border-gray-700' : 'border-slate-200'}`}>
           <h3 className="text-2xl font-bold">{isEdit ? t.editWarehouse : t.addWarehouse}</h3>
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-500/20"><X size={24} /></button>
         </div>
         <form onSubmit={e => { e.preventDefault(); handleSubmit(); }} className="overflow-y-auto flex-1 p-6 space-y-4">
           <div>
             <label className={labelClasses}>{t.warehouseName} *</label>
-            <input type="text" value={formData.name} onChange={e => handleChange('name', e.target.value)} className={formInputClasses}/>
+            <input type="text" value={formData.name || ''} onChange={e => handleChange('name', e.target.value)} className={formInputClasses}/>
             {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
           </div>
           <div>
@@ -70,8 +71,8 @@ export const WarehouseFormModal: React.FC<WarehouseFormModalProps> = ({ warehous
             <input type="text" value={formData.location || ''} onChange={e => handleChange('location', e.target.value)} className={formInputClasses}/>
           </div>
         </form>
-        <div className={`flex justify-end gap-3 p-4 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-slate-200'}`}>
-            <button type="button" onClick={onClose} className={`px-6 py-3 rounded-xl font-semibold ${theme === 'dark' ? 'bg-gray-800' : 'bg-slate-200'}`}>{t.cancel}</button>
+        <div className={`flex justify-end gap-3 p-4 border-t ${theme.startsWith('dark') ? 'border-gray-700' : 'border-slate-200'}`}>
+            <button type="button" onClick={onClose} className={`px-6 py-3 rounded-xl font-semibold ${theme.startsWith('dark') ? 'bg-gray-800' : 'bg-slate-200'}`}>{t.cancel}</button>
             <HoloButton variant="success" onClick={handleSubmit} disabled={isSaving}>
               {isSaving ? (
                 <Loader size={20} className="animate-spin" />

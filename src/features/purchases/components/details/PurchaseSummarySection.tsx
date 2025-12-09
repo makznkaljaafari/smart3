@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { PurchaseInvoice } from '../../../types';
+import { PurchaseInvoice } from '../../../../types';
 import { useZustandStore } from '../../../../store/useStore';
 import { formatCurrency } from '../../../../lib/formatters';
 
@@ -12,7 +12,7 @@ interface PurchaseSummarySectionProps {
 
 export const PurchaseSummarySection: React.FC<PurchaseSummarySectionProps> = ({ purchase, currency, t }) => {
   const theme = useZustandStore(state => state.theme);
-  const isDark = theme === 'dark';
+  const isDark = !theme.startsWith('light');
 
   return (
     <div className="flex flex-col md:flex-row justify-end gap-8">

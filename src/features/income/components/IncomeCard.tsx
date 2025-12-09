@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
 import { Income, IncomeCategory } from '../../../types';
 import { Eye, Edit2, Trash2, MoreVertical, Calendar, BarChart3, Tag, RefreshCw, ArrowUpRight } from 'lucide-react';
 import { useZustandStore } from '../../../store/useStore';
+import { AppTheme } from '../../../types';
 
 const INCOME_CATEGORY_CONFIG: Record<IncomeCategory, { label: string; icon: React.ElementType }> = {
   product_sales: { label: 'مبيعات منتجات', icon: Tag },
@@ -15,10 +17,10 @@ const INCOME_CATEGORY_CONFIG: Record<IncomeCategory, { label: string; icon: Reac
 const formatCurrency = (amount: number, currency: string) => new Intl.NumberFormat('en-US', { style: 'currency', currency, minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
 const formatShortDate = (dateString?: string) => dateString ? new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(dateString)) : '';
 
-export const IncomeCard: React.FC<{ income: Income; onEdit: (i: Income) => void; onDelete: (id: string) => void; onViewDetails: (i: Income) => void; theme: 'dark'|'light'; }> = ({ income, onEdit, onDelete, onViewDetails, theme }) => {
+export const IncomeCard: React.FC<{ income: Income; onEdit: (i: Income) => void; onDelete: (id: string) => void; onViewDetails: (i: Income) => void; theme: AppTheme; }> = ({ income, onEdit, onDelete, onViewDetails, theme }) => {
     const CategoryIcon = INCOME_CATEGORY_CONFIG[income.category]?.icon || Tag;
     const [menuOpen, setMenuOpen] = useState(false);
-    const isDark = theme === 'dark';
+    const isDark = theme.startsWith('dark');
 
     const cardBg = isDark ? 'bg-gray-900/60 backdrop-blur-md' : 'bg-white';
     const borderColor = isDark ? 'border-gray-800' : 'border-slate-200';

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SalesInvoice } from '../../../types';
+import { SalesInvoice, AppTheme } from '../../../../types';
 import { useZustandStore } from '../../../../store/useStore';
 import { formatCurrency } from '../../../../lib/formatters';
 
@@ -12,7 +12,7 @@ interface SalesItemsSectionProps {
 
 export const SalesItemsSection: React.FC<SalesItemsSectionProps> = ({ items, currency, t }) => {
   const theme = useZustandStore(state => state.theme);
-  const isDark = theme === 'dark';
+  const isDark = !theme.startsWith('light');
 
   return (
     <div>

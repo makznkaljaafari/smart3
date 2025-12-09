@@ -1,18 +1,20 @@
+
 import React from 'react';
-import { Warehouse } from '../../../types';
+import { Warehouse, AppTheme } from '../../../types';
 import { Edit2, Trash2, MapPin } from 'lucide-react';
 
 interface WarehouseCardProps {
   warehouse: Warehouse;
-  theme: 'light' | 'dark';
+  theme: AppTheme;
   onEdit: () => void;
   onDelete: () => void;
   onViewDetails: () => void;
 }
 
 export const WarehouseCard: React.FC<WarehouseCardProps> = ({ warehouse, theme, onEdit, onDelete, onViewDetails }) => {
-  const cardClasses = theme === 'dark' ? 'bg-gray-900 border-gray-700/50 hover:border-cyan-500/50' : 'bg-white border-gray-200 shadow-sm hover:shadow-lg';
-  const textClasses = { main: theme === 'dark' ? 'text-white' : 'text-gray-900', sub: theme === 'dark' ? 'text-gray-400' : 'text-gray-600' };
+  const isDark = !theme.startsWith('light');
+  const cardClasses = isDark ? 'bg-gray-900 border-gray-700/50 hover:border-cyan-500/50' : 'bg-white border-gray-200 shadow-sm hover:shadow-lg';
+  const textClasses = { main: isDark ? 'text-white' : 'text-gray-900', sub: isDark ? 'text-gray-400' : 'text-gray-600' };
 
   return (
     <div className={`rounded-xl transition-all duration-300 border flex flex-col h-full ${cardClasses}`}>
@@ -27,9 +29,9 @@ export const WarehouseCard: React.FC<WarehouseCardProps> = ({ warehouse, theme, 
           </p>
         )}
       </div>
-      <div className={`p-3 border-t flex justify-end gap-2 ${theme === 'dark' ? 'border-gray-700' : 'border-slate-200'}`}>
-        <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className={`p-2 rounded-lg text-blue-500 ${theme === 'dark' ? 'hover:bg-blue-500/10' : 'hover:bg-blue-100'}`} title="تعديل"><Edit2 size={18} /></button>
-        <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className={`p-2 rounded-lg text-red-500 ${theme === 'dark' ? 'hover:bg-red-500/10' : 'hover:bg-red-100'}`} title="حذف"><Trash2 size={18} /></button>
+      <div className={`p-3 border-t flex justify-end gap-2 ${isDark ? 'border-gray-700' : 'border-slate-200'}`}>
+        <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className={`p-2 rounded-lg text-blue-500 ${isDark ? 'hover:bg-blue-500/10' : 'hover:bg-blue-100'}`} title="تعديل"><Edit2 size={18} /></button>
+        <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className={`p-2 rounded-lg text-red-500 ${isDark ? 'hover:bg-red-500/10' : 'hover:bg-red-100'}`} title="حذف"><Trash2 size={18} /></button>
       </div>
     </div>
   );

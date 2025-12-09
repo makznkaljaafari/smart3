@@ -28,7 +28,7 @@ export const InvoiceItemsTable: React.FC<InvoiceItemsTableProps> = ({
     stockWarnings, t, invoiceType, currency, showWarehouseColumn = true 
 }) => {
     const { theme, warehouses, settings, lang } = useZustandStore();
-    const isDark = theme !== 'light';
+    const isDark = theme.startsWith('dark');
     const displayCurrency = currency || settings.baseCurrency;
     const isRTL = lang === 'ar';
     
@@ -173,7 +173,7 @@ export const InvoiceItemsTable: React.FC<InvoiceItemsTableProps> = ({
                                             <td className={`p-0 border-l ${borderColor}`} data-label="المستودع">
                                                 <Select 
                                                     ref={el => registerRef(el, index, 'warehouseId')}
-                                                    value={item.warehouseId} 
+                                                    value={item.warehouseId || ''} 
                                                     onChange={e => onItemChange(item.productId, 'warehouseId', e.target.value)} 
                                                     onKeyDown={e => handleKeyDown(e, index, 'warehouseId')}
                                                     className={`${inputClasses} !text-right text-xs appearance-none px-3`}
@@ -190,7 +190,7 @@ export const InvoiceItemsTable: React.FC<InvoiceItemsTableProps> = ({
                                             <input 
                                                 ref={el => registerRef(el, index, 'quantity')}
                                                 type="number" 
-                                                value={item.quantity} 
+                                                value={item.quantity || ''} 
                                                 onChange={e => onItemChange(item.productId, 'quantity', Number(e.target.value))} 
                                                 onKeyDown={e => handleKeyDown(e, index, 'quantity')}
                                                 className={inputClasses}
@@ -203,7 +203,7 @@ export const InvoiceItemsTable: React.FC<InvoiceItemsTableProps> = ({
                                             <input 
                                                 ref={el => registerRef(el, index, 'unitPrice')}
                                                 type="number" 
-                                                value={item.unitPrice} 
+                                                value={item.unitPrice || ''} 
                                                 onChange={e => onItemChange(item.productId, 'unitPrice', Number(e.target.value))}
                                                 onKeyDown={e => handleKeyDown(e, index, 'unitPrice')}
                                                 className={inputClasses}

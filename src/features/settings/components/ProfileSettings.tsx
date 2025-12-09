@@ -1,7 +1,7 @@
 
 import React, { useMemo } from 'react';
 import { SectionBox } from '../../../components/ui/SectionBox';
-import { SettingsState, CurrencyCode, LangCode } from '../../../types';
+import { SettingsState, CurrencyCode, LangCode, AppTheme } from '../../../types';
 import { currencyLabels } from '../../../lib/i18n';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
@@ -11,7 +11,7 @@ interface ProfileSettingsProps {
   setLocalSettings: React.Dispatch<React.SetStateAction<SettingsState>>;
   t: Record<string, string>;
   lang: 'ar' | 'en';
-  theme: 'light' | 'dark';
+  theme: AppTheme;
 }
 
 export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ localSettings, setLocalSettings, t, lang, theme }) => {

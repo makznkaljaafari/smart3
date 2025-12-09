@@ -23,7 +23,7 @@ export const FinancialHealthCard: React.FC<FinancialHealthCardProps> = ({
     inCustomizeMode, isVisible, onToggleVisibility 
 }) => {
   const isGenerated = typeof score === 'number';
-  const isDark = theme.includes('dark');
+  const isDark = theme.startsWith('dark');
 
   const radius = 54;
   const circumference = 2 * Math.PI * radius;

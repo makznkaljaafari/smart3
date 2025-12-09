@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { SectionBox } from '../../../components/ui/SectionBox';
-import { SettingsState } from '../../../types';
+import { SettingsState, AppTheme } from '../../../types';
 import { useZustandStore } from '../../../store/useStore';
 import { Select } from '../../../components/ui/Select';
 import { Label } from '../../../components/ui/Label';
@@ -14,7 +14,7 @@ interface AccountingSettingsProps {
   localSettings: SettingsState;
   setLocalSettings: React.Dispatch<React.SetStateAction<SettingsState>>;
   t: Record<string, string>;
-  theme: 'light' | 'dark';
+  theme: AppTheme;
   lang: 'ar' | 'en';
 }
 
@@ -162,7 +162,7 @@ export const AccountingSettings: React.FC<AccountingSettingsProps> = ({ localSet
     return (
         <SectionBox title={t.accountingDefaults} theme={theme}>
             <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
-                <p className={`text-xs max-w-md ${theme === 'dark' ? 'text-gray-400' : 'text-slate-500'}`}>
+                <p className={`text-xs max-w-md ${theme.startsWith('dark') ? 'text-gray-400' : 'text-slate-500'}`}>
                     {t.accountingDefaultsDescription}
                     <br/>
                     <span className="text-orange-400 font-semibold">مهم:</span> تأكد من حفظ الإعدادات هنا لضمان عمل الفواتير والقيود الآلية بشكل صحيح.
@@ -180,7 +180,7 @@ export const AccountingSettings: React.FC<AccountingSettingsProps> = ({ localSet
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <h4 className={`col-span-full text-sm font-bold border-b pb-2 mt-2 ${theme === 'dark' ? 'border-gray-700 text-cyan-400' : 'border-slate-200 text-cyan-700'}`}>حسابات الفواتير والديون</h4>
+                <h4 className={`col-span-full text-sm font-bold border-b pb-2 mt-2 ${theme.startsWith('dark') ? 'border-gray-700 text-cyan-400' : 'border-slate-200 text-cyan-700'}`}>حسابات الفواتير والديون</h4>
                 <AccountSelector
                     label={t.defaultAccountsReceivableId}
                     value={localSettings.accounting.defaultAccountsReceivableId}
@@ -196,7 +196,7 @@ export const AccountingSettings: React.FC<AccountingSettingsProps> = ({ localSet
                     type="liability"
                 />
                 
-                <h4 className={`col-span-full text-sm font-bold border-b pb-2 mt-2 ${theme === 'dark' ? 'border-gray-700 text-green-400' : 'border-slate-200 text-green-700'}`}>حسابات المبيعات والمخزون</h4>
+                <h4 className={`col-span-full text-sm font-bold border-b pb-2 mt-2 ${theme.startsWith('dark') ? 'border-gray-700 text-green-400' : 'border-slate-200 text-green-700'}`}>حسابات المبيعات والمخزون</h4>
                  <AccountSelector
                     label={t.defaultSalesAccountId}
                     value={localSettings.accounting.defaultSalesAccountId}
@@ -226,7 +226,7 @@ export const AccountingSettings: React.FC<AccountingSettingsProps> = ({ localSet
                     type="expense"
                 />
 
-                <h4 className={`col-span-full text-sm font-bold border-b pb-2 mt-2 ${theme === 'dark' ? 'border-gray-700 text-orange-400' : 'border-slate-200 text-orange-700'}`}>حسابات المصروفات والضرائب</h4>
+                <h4 className={`col-span-full text-sm font-bold border-b pb-2 mt-2 ${theme.startsWith('dark') ? 'border-gray-700 text-orange-400' : 'border-slate-200 text-orange-700'}`}>حسابات المصروفات والضرائب</h4>
                 <AccountSelector
                     label={t.defaultGeneralExpenseAccountId}
                     value={localSettings.accounting.defaultGeneralExpenseAccountId}
