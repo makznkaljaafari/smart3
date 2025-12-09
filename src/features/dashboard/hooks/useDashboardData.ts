@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -232,7 +231,7 @@ export const useDashboardData = () => {
             const prompt = `Financial insights bullet points in ${lang}. Data: ${JSON.stringify(dashboardStats)} and Forecast: ${JSON.stringify(forecastResult)}. Focus on actionable advice.`;
             const responseText = await callAIProxy(prompt);
             if (responseText) {
-                setAiInsights(responseText.split(/•|-/).filter(s => s.trim()).map(s => s.trim()));
+                setAiInsights(responseText.split(/•|-/).filter((s: string) => s.trim()).map((s: string) => s.trim()));
             }
         } catch (e) {
             setInsightsError('Failed to generate insights');
@@ -246,7 +245,7 @@ export const useDashboardData = () => {
         setShowStrategyModal(true);
         try {
             const cashOnHand = accountBalances?.data?.filter(a => a.account_type === 'asset' && (a.account_name.toLowerCase().includes('cash') || a.account_name.includes('نقد'))).reduce((sum: number, a: any) => sum + a.balance, 0) || 0;
-            const inventoryValue = inventoryLevels.reduce((sum, l) => sum + (l.quantity * 50), 0); 
+            const inventoryValue = inventoryLevels.reduce((sum: number, l: any) => sum + (l.quantity * 50), 0); 
             const burnRate = (dashboardStats.totalExpenses.value || 0) / 12; 
 
             const advice = await generateStrategicAdvice({

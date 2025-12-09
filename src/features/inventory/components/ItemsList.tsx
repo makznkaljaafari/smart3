@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useZustandStore } from '../../../store/useStore';
 import { translations } from '../../../lib/i18n';
@@ -98,6 +97,10 @@ export const ItemsList: React.FC = () => {
         handleViewProduct,
     } = useInventoryData();
 
+    // Ensure stockTotals is an object with number values, handling potential undefined
+    // Type assertion to handle the loose type from hook
+    const safeStockTotals: Record<string, number> = (stockTotals || {}) as Record<string, number>;
+
     const renderContent = () => {
         if (productsLoading) return <InventorySkeleton theme={theme as AppTheme} />;
         
@@ -125,7 +128,7 @@ export const ItemsList: React.FC = () => {
                             <ProductCard 
                                 key={product.id} 
                                 product={product} 
-                                stockQuantity={stockTotals[product.id] || 0}
+                                stockQuantity={safeStockTotals[product.id] || 0}
                                 onEdit={() => handleEditProduct(product)}
                                 onDelete={() => handleDeleteProduct(product.id)}
                                 onQuickAdjust={() => handleOpenAdjustModal(product)}
@@ -142,7 +145,7 @@ export const ItemsList: React.FC = () => {
                                 <ProductCard 
                                     key={product.id} 
                                     product={product} 
-                                    stockQuantity={stockTotals[product.id] || 0}
+                                    stockQuantity={safeStockTotals[product.id] || 0}
                                     onEdit={() => handleEditProduct(product)}
                                     onDelete={() => handleDeleteProduct(product.id)}
                                     onQuickAdjust={() => handleOpenAdjustModal(product)}
@@ -153,7 +156,7 @@ export const ItemsList: React.FC = () => {
                     ) : (
                         <ProductDataTable 
                             products={paginatedProducts} 
-                            stockTotals={stockTotals} 
+                            stockTotals={safeStockTotals} 
                             onEdit={handleEditProduct} 
                             onDelete={handleDeleteProduct}
                             onQuickAdjust={handleOpenAdjustModal}

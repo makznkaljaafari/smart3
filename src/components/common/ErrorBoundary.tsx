@@ -59,14 +59,11 @@ const FallbackComponent: React.FC<{ onRefresh: () => void, onHome: () => void, e
 }
 
 export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = {
-      hasError: false,
-      error: null,
-      errorInfo: null
-    };
-  }
+  public state: ErrorBoundaryState = {
+    hasError: false,
+    error: null,
+    errorInfo: null
+  };
 
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
     return { hasError: true, error };

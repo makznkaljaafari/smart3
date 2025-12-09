@@ -1,4 +1,3 @@
-
 import React, { useEffect, useMemo } from 'react';
 import { Plus, Search, Filter, Download, Upload, LayoutGrid, List, AlertCircle, DollarSign, Trash2, Users, User, ChevronLeft, ChevronRight } from 'lucide-react';
 import { HoloButton } from '../../components/ui/HoloButton';
@@ -83,7 +82,7 @@ export const CustomersView: React.FC = () => {
                         <CustomerCard 
                             key={c.id} 
                             customer={c} 
-                            theme={theme} 
+                            theme={theme as AppTheme} 
                             lang={lang} 
                             baseCurrency={settings.baseCurrency} 
                             exchangeRates={settings.exchangeRates} 
@@ -108,7 +107,7 @@ export const CustomersView: React.FC = () => {
                         <CustomerRow 
                             key={c.id} 
                             customer={c} 
-                            theme={theme} 
+                            theme={theme as AppTheme} 
                             lang={lang} 
                             baseCurrency={settings.baseCurrency} 
                             exchangeRates={settings.exchangeRates} 
@@ -215,8 +214,8 @@ export const CustomersView: React.FC = () => {
       
       {renderContent()}
 
-      {showDetailsModal && (<CustomerDetailsModal theme={theme} lang={lang} customer={selectedCustomer} onClose={handleCloseModals} />)}
-      {showFormModal && (<CustomerFormModal theme={theme} customer={editingCustomer} onClose={handleCloseModals} onSave={handleSaveCustomer} />)}
+      {showDetailsModal && (<CustomerDetailsModal theme={theme as AppTheme} lang={lang} customer={selectedCustomer} onClose={handleCloseModals} />)}
+      {showFormModal && (<CustomerFormModal theme={theme as AppTheme} customer={editingCustomer} onClose={handleCloseModals} onSave={handleSaveCustomer} />)}
       
       <ConfirmationModal isOpen={!!deletingCustomerId} onClose={cancelDeleteCustomer} onConfirm={confirmDeleteCustomer} title={t.areYouSureDeleteCustomer} message={t.deleteConfirmationMessageCustomer} confirmText={t.confirmDelete} isConfirming={isDeleting} />
       <ConfirmationModal isOpen={isBulkDeleteConfirmOpen} onClose={cancelBulkDelete} onConfirm={confirmBulkDelete} title={t.areYouSureDeleteSelected} message={t.deleteSelectedConfirmationMessage.replace('{count}', selectedIds.size.toString())} confirmText={t.confirmDelete} isConfirming={isDeleting} />

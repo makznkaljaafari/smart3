@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Supplier, PurchaseInvoice, PurchaseReturn, LangCode } from '../../../types';
 import { useZustandStore } from '../../../store/useStore';
@@ -50,7 +49,8 @@ export const SupplierDetailsModal: React.FC<SupplierDetailsModalProps> = ({ supp
         queryKey: ['supplierReturns', supplier.id],
         queryFn: async () => {
             const { data } = await purchaseService.getPurchaseReturns();
-            return data.filter(pr => pr.supplierName === supplier.name);
+            // Assuming getPurchaseReturns returns an array of PurchaseReturn
+            return data.filter((pr: any) => pr.supplierName === supplier.name);
         },
         enabled: !!supplier.id
     });
@@ -65,7 +65,7 @@ export const SupplierDetailsModal: React.FC<SupplierDetailsModalProps> = ({ supp
     });
 
     const supplierPurchases = useMemo(() => (purchasesData || []).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()), [purchasesData]);
-    const supplierReturns = useMemo(() => (returnsData || []).sort((a,b) => new Date(b.returnDate).getTime() - new Date(a.returnDate).getTime()), [returnsData]);
+    const supplierReturns = useMemo(() => (returnsData || []).sort((a: any, b: any) => new Date(b.returnDate).getTime() - new Date(a.returnDate).getTime()), [returnsData]);
     const supplierExpenses = useMemo(() => (expensesData || []).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()), [expensesData]);
 
 
@@ -216,7 +216,7 @@ export const SupplierDetailsModal: React.FC<SupplierDetailsModalProps> = ({ supp
                     {activeTab === 'returns' && (
                         supplierReturns.length > 0 ? (
                             <div className="space-y-3">
-                                {supplierReturns.map((pr) => (
+                                {supplierReturns.map((pr: any) => (
                                     <div key={pr.id} className={`p-4 rounded-xl border flex justify-between items-center ${cardBg}`}>
                                         <div>
                                             <p className="font-bold text-white">مرتجع شراء</p>

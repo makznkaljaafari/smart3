@@ -1,8 +1,8 @@
-
 import { useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useZustandStore } from '../store/useStore';
 import { bootstrapAuthAndCompany } from '../services/authBootstrap';
+import { AuthChangeEvent, Session } from '@supabase/supabase-js';
 
 export const useAppInitialization = () => {
   const { 
@@ -33,7 +33,7 @@ export const useAppInitialization = () => {
 
     initAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
          const state = useZustandStore.getState();
          if (!state.currentCompany) {

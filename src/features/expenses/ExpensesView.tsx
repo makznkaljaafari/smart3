@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useZustandStore } from '../../store/useStore';
 import { translations } from '../../lib/i18n';

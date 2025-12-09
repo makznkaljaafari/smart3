@@ -1,4 +1,3 @@
-
 import { supabase } from '../../../lib/supabaseClient';
 import { getStore } from '../../../lib/storeAccess';
 import { reportService } from '../../reports/api/reportService';

@@ -97,7 +97,7 @@ export const salesService = {
         
       if (salesError) return { data: null, error: salesError };
 
-      const totalSales = (todaysSales || []).reduce((sum, s) => sum + s.total, 0) || 0;
+      const totalSales = (todaysSales || []).reduce((sum: number, s: any) => sum + s.total, 0) || 0;
       const countSales = todaysSales?.length || 0;
 
       return {

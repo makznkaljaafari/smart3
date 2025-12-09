@@ -1,4 +1,3 @@
-
 import { supabase } from '../../../lib/supabaseClient';
 import { getStore } from '../../../lib/storeAccess';
 import { ReconciliationTransaction } from '../../accounting/types';
@@ -27,7 +26,7 @@ export const reconciliationService = {
 
         const transactions: ReconciliationTransaction[] = (data || []).map((line: any) => ({
             id: line.id,
-            date: line.journal_entries?.entry_date || '', // Default empty string
+            date: line.journal_entries?.entry_date || new Date().toISOString().split('T')[0], // Fallback if missing
             description: line.journal_entries?.description || line.note || 'Transaction',
             amount: line.debit - line.credit, 
             isCleared: false // Initially unchecked in UI

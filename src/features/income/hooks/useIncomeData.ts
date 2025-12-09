@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useZustandStore } from '../../../store/useStore';
 import { translations } from '../../../lib/i18n';
@@ -18,10 +17,10 @@ export const useIncomeData = () => {
     const t = translations[lang];
     const queryClient = useQueryClient();
 
-    const [filters, setFilters] = useState({ category: 'all' as IncomeCategory | 'all', searchQuery: '' });
+    const [filters, setFilters] = useState<{ category: IncomeCategory | 'all', searchQuery: string, dateFrom?: string, dateTo?: string }>({ category: 'all', searchQuery: '' });
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 10; // Could come from settings
+    const pageSize = 10;
 
     const [showFormModal, setShowFormModal] = useState(false);
     const [editingIncome, setEditingIncome] = useState<Income | null>(null);
@@ -37,12 +36,14 @@ export const useIncomeData = () => {
 
     // --- React Query: List ---
     const { data: incomeData, isLoading, isError, error } = useQuery({
-        queryKey: ['income', currentCompany?.id, currentPage, pageSize, filters.category, debouncedSearch],
+        queryKey: ['income', currentCompany?.id, currentPage, pageSize, filters.category, debouncedSearch, filters.dateFrom, filters.dateTo],
         queryFn: () => incomeService.getIncomePaginated({
             page: currentPage,
             pageSize,
             search: debouncedSearch,
-            category: filters.category
+            category: filters.category,
+            dateFrom: filters.dateFrom,
+            dateTo: filters.dateTo
         }),
         placeholderData: keepPreviousData,
         enabled: !!currentCompany?.id,
@@ -51,7 +52,7 @@ export const useIncomeData = () => {
     // --- React Query: Stats ---
     const { data: statsData } = useQuery({
         queryKey: ['incomeStats', currentCompany?.id],
-        queryFn: incomeService.getIncomeStats,
+        queryFn: () => incomeService.getIncomeStats(), 
         enabled: !!currentCompany?.id,
     });
 

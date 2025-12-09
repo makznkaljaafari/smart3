@@ -1,4 +1,3 @@
-
 import { useEffect, useRef } from 'react';
 import { useZustandStore } from '../store/useStore';
 import { eventBus } from '../lib/events';
@@ -154,7 +153,7 @@ export const useAutomationEngine = () => {
 
                 // 6. Low Stock Alerts & AI Prediction
                 if (safeProducts.length > 0 && safeInventoryLevels.length > 0) {
-                    const stockTotals = safeInventoryLevels.reduce((acc, level) => {
+                    const stockTotals = safeInventoryLevels.reduce((acc: Record<string, number>, level) => {
                         acc[level.productId] = (acc[level.productId] || 0) + level.quantity;
                         return acc;
                     }, {} as Record<string, number>);

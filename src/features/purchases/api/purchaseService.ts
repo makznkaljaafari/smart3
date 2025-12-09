@@ -94,7 +94,7 @@ export const purchaseService = {
 
       if (purchaseError) return { data: null, error: purchaseError };
 
-      const totalPurchases = (todaysPurchases || []).reduce((sum, s) => sum + s.total, 0) || 0;
+      const totalPurchases = (todaysPurchases || []).reduce((sum: number, s: any) => sum + s.total, 0) || 0;
       return {
           data: { todayTotal: totalPurchases, todayCount: todaysPurchases?.length || 0, todayReturns: 0, netPurchases: totalPurchases },
           error: null
@@ -189,14 +189,14 @@ export const purchaseService = {
          return { data: null, error: new Error(`Could not find or create supplier: ${purchaseData.supplierName}`) };
     }
 
-    const subtotal = purchaseData.items.reduce((sum, i) => sum + (i.quantity * i.price), 0);
+    const subtotal = purchaseData.items.reduce((sum: number, i: any) => sum + (i.quantity * i.price), 0);
     const totalDiscount = purchaseData.discount || 0;
     const totalTax = purchaseData.tax || 0;
     
     const netSubtotal = Math.max(0, subtotal - totalDiscount);
     const effectiveTaxRate = netSubtotal > 0 ? (totalTax / netSubtotal) : 0;
 
-    const itemsJsonb = purchaseData.items.map(item => {
+    const itemsJsonb = purchaseData.items.map((item: any) => {
         const itemTotal = item.quantity * item.price;
         const itemWeight = subtotal > 0 ? itemTotal / subtotal : 0;
         const itemDiscount = totalDiscount * itemWeight;

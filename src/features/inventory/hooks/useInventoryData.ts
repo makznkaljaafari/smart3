@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useZustandStore } from '../../../store/useStore';
 import { translations } from '../../../lib/i18n';
@@ -114,7 +113,7 @@ export const useInventoryData = () => {
         // Only fetch a subset for AI context (top 50) to avoid overloading payload
         const { data: allProductsShort } = await inventoryService.getProductsPaginated({ page: 1, pageSize: 50, search: searchTerm }); 
 
-        const productList = allProductsShort.map(p => ({
+        const productList = allProductsShort.map((p: any) => ({
             id: p.id,
             name: p.name,
             sku: p.sku,

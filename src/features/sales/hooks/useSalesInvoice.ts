@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useZustandStore } from '../../../store/useStore';
 import { salesService } from '../../../services/salesService';
@@ -110,7 +109,7 @@ export const useSalesInvoice = () => {
             const productIds = Array.from(new Set(items.map(i => i.productId))) as string[];
             const { data: levels } = await inventoryService.getBatchStockLevels(productIds, warehouseId);
             const stockMap = new Map();
-            levels?.forEach((l: any) => stockMap.set(l.product_id, l.quantity));
+            levels?.forEach((l: any) => stockMap.set(l.productId, l.quantity));
 
             const newWarnings: Record<string, string> = {};
 
