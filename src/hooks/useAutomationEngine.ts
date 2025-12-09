@@ -86,10 +86,9 @@ export const useAutomationEngine = () => {
             allEvents.forEach(e => notifyAll(e, settings));
             
             // Update Store (In a real app, this would likely be batched server-side or via specific actions)
-            // Here we just log for demonstration as we can't easily mutate store from here without actions
             if (allLogs.length > 0) {
+                // Log for demonstration
                 // console.log("Automation Run:", allLogs);
-                // useZustandStore.setState(s => ({ automationLogs: [...s.automationLogs, ...allLogs] }));
             }
         };
 

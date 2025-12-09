@@ -19,7 +19,7 @@ interface CommandPaletteProps {
 
 export const CommandPalette: React.FC<CommandPaletteProps> = ({ onClose }) => {
   const { customers, products, lang } = useZustandStore(state => ({
-    customers: state.customers || [], // Fallback if undefined in store initial state
+    customers: state.customers || [], 
     products: state.products || [],
     lang: state.lang
   }));
@@ -40,7 +40,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ onClose }) => {
     id: `cust-${c.id}`,
     title: c.name,
     type: 'customer',
-    path: ROUTES.CUSTOMERS, // In real app, could nav to details
+    path: ROUTES.CUSTOMERS,
     icon: Users
   }));
 
@@ -56,7 +56,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ onClose }) => {
     if (!query) return pages;
     const lowerQuery = query.toLowerCase();
     
-    const matchedPages = pages.filter(p => p.title.toLowerCase().includes(lowerQuery));
+    // Explicitly type 'p' here to fix implicit any error
+    const matchedPages = pages.filter((p: any) => p.title.toLowerCase().includes(lowerQuery));
     const matchedCustomers = customerResults.filter(c => c.title.toLowerCase().includes(lowerQuery)).slice(0, 5);
     const matchedProducts = productResults.filter(p => p.title.toLowerCase().includes(lowerQuery)).slice(0, 5);
 

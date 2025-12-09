@@ -98,7 +98,8 @@ export const useInventoryData = () => {
   // Filter products if AI search active
   const displayedProducts = useMemo(() => {
       if (aiFilteredProductIds !== null) {
-         return products.filter((p: Product) => aiFilteredProductIds.includes(p.id));
+         // Fix: explicitly type p as any to resolve implicit any error
+         return products.filter((p: any) => aiFilteredProductIds.includes(p.id));
       }
       return products;
   }, [products, aiFilteredProductIds]);

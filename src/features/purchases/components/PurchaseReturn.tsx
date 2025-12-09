@@ -41,8 +41,6 @@ export const PurchaseReturn: React.FC = () => {
             } else {
                 setOriginalInvoice(data);
                 // Initialize return items with 0 quantity
-                // Note: purchase invoice items usually don't have warehouse info stored directly in all schemas
-                // Assuming we use a default or need to fetch it. For now, using empty string.
                 setReturnItems(data.items.map(item => ({
                     productId: item.productId,
                     productName: item.productName,
@@ -99,7 +97,8 @@ export const PurchaseReturn: React.FC = () => {
         });
 
         if (saveError) {
-            addToast({ message: `فشل حفظ المرتجع: ${(saveError as any).message || saveError.message}`, type: 'error' });
+            // Fix: Cast saveError to any to safely access message
+            addToast({ message: `فشل حفظ المرتجع: ${(saveError as any).message || 'Error'}`, type: 'error' });
         } else {
             addToast({ message: 'تم حفظ مرتجع الشراء بنجاح!', type: 'success' });
             setOriginalInvoice(null);

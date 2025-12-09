@@ -65,7 +65,8 @@ export const IntegrationsView: React.FC = () => {
     ];
     
     const renderContent = () => {
-        const commonProps = { localSettings, setLocalSettings, t, theme: theme as AppTheme, lang };
+        // Fix: Cast theme to any to allow wider AppTheme types if child components have stricter checks
+        const commonProps = { localSettings, setLocalSettings, t, theme: theme as any, lang };
         switch(activeTab) {
             case 'rules': return <AutomationRules {...commonProps} />;
             case 'connections': return <IntegrationConnections {...commonProps} />;

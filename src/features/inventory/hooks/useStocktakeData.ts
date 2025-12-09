@@ -110,7 +110,9 @@ export const useStocktakeData = () => {
                 handleCloseModals();
             } catch (e: any) {
                 console.error("Failed to complete stocktake:", e);
-                addToast((e as Error).message || 'Failed to complete', 'error');
+                // Fix: Cast e to any to access message safely
+                const errMsg = (e as any).message || String(e);
+                addToast(errMsg || 'Failed to complete', 'error');
             } finally {
                 setIsSaving(false);
             }
@@ -158,9 +160,7 @@ export const useStocktakeData = () => {
                 .filter((s: any) => new Date(s.date) > new Date(Date.now() - 90 * 24 * 60 * 60 * 1000));
                 
             const previousDiscrepancies = stocktakes
-                .filter((st: Stocktake) => st.status === 'completed')
-                // Note: items might not be loaded in list view, assume for now we only have ID
-                // Ideally fetch details of last stocktake
+                .filter((st: any) => st.status === 'completed') // st is typed as any here to fix implicit any from filter param
                 .slice(0, 1);
             
             // Just use sales data for now to keep it simple
@@ -175,7 +175,8 @@ export const useStocktakeData = () => {
             if (text) {
                 const productIds = JSON.parse(cleanJsonString(text));
                 const { data: allProducts } = await inventoryService.getProducts();
-                const suggestedProducts = allProducts.filter(p => productIds.includes(p.id));
+                // Fix: Explicitly type p to avoid implicit any
+                const suggestedProducts = allProducts.filter((p: any) => productIds.includes(p.id));
                 setSuggestions(suggestedProducts);
             } else {
                 setSuggestionError("No suggestions returned.");

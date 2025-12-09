@@ -6,8 +6,7 @@ import { Input } from '../../../components/ui/Input';
 import { Search, Loader, ServerCrash, FileText, ChevronLeft, ChevronRight, Send, Download, Eye } from 'lucide-react';
 import { SalesHistoryRow } from './SalesHistoryRow';
 import { HoloButton } from '../../../components/ui/HoloButton';
-import { SalesInvoice } from '../types'; // Corrected import
-import { LangCode } from '../../../types.base'; // Corrected import
+import { SalesInvoice, LangCode } from '../../../types';
 import { eventBus } from '../../../lib/events';
 import { SalesDetailsModal } from './SalesDetailsModal';
 import { useQuery, keepPreviousData, useQueryClient } from '@tanstack/react-query';

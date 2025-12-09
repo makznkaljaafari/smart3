@@ -34,12 +34,6 @@ export const accountingAuditService = {
     let totalCredit = 0;
     
     if (!tbError && tb) {
-        // Assuming the RPC returns account balances. A trial balance should sum all debit and credit balances.
-        // If the view returns a single 'balance', we separate.
-        // Actually, vw_account_balances usually returns total_debit and total_credit for the account's history.
-        // We need to sum them up.
-        // Let's rely on `total_debit` and `total_credit` columns from the view.
-        
         tb.forEach((row: any) => {
             totalDebit += Number(row.total_debit || 0);
             totalCredit += Number(row.total_credit || 0);
@@ -90,14 +84,6 @@ export const accountingAuditService = {
     }
     
     // 4. Check Unbalanced Journal Entries (Individual)
-    const { data: unbalancedEntries } = await supabase
-        .from('journal_entries')
-        .select('id, description, total_debit, total_credit')
-        .eq('company_id', companyId)
-        .neq('total_debit', supabase.rpc('total_credit')) // Pseudo-code, requires raw SQL or client filtering
-        .limit(50);
-        
-    // Client side filter for simplicity if RPC not available
     const { data: recentEntries } = await supabase.from('journal_entries').select('*').eq('company_id', companyId).order('created_at', { ascending: false }).limit(50);
     const actuallyUnbalanced = (recentEntries || []).filter((e: any) => Math.abs(e.total_debit - e.total_credit) > 0.01);
     
@@ -105,6 +91,7 @@ export const accountingAuditService = {
         score -= (actuallyUnbalanced.length * 10);
         issues.push({
             id: 'unbalanced-journal',
+            // Fix: ensure severity is typed correctly as a literal
             severity: 'critical' as const,
             title: 'قيود يومية غير متوازنة',
             description: `تم العثور على ${actuallyUnbalanced.length} قيود غير متوازنة في آخر 50 عملية.`,

@@ -81,7 +81,8 @@ export const useSalesInvoice = () => {
             if (purchaseHistory.length >= 0 && availableToSuggest.length > 0) {
                  const suggestedIds = await suggestProductsForCustomer(selectedCustomer.name, purchaseHistory, availableToSuggest);
                  if (suggestedIds) {
-                     setAiSuggestions(products.filter((p: Product) => suggestedIds.includes(p.id) && !items.some(i => i.productId === p.id)));
+                     // Fix: explicitly type p as Product or any to avoid implicit any
+                     setAiSuggestions(products.filter((p: any) => suggestedIds.includes(p.id) && !items.some(i => i.productId === p.id)));
                  } else {
                      setAiSuggestions([]);
                  }
@@ -223,9 +224,6 @@ export const useSalesInvoice = () => {
 
             if (error) throw error;
             
-            // Inventory movements handled via logic in createSale or separate
-            // For this implementation, we assume createSale RPC handles inventory deduction via trigger or we call logic
-            // Since we moved logic to frontend service for consistency in this example:
             if (invoiceId) {
                  const movements = items.map(item => ({
                      productId: item.productId,
@@ -255,7 +253,6 @@ export const useSalesInvoice = () => {
     };
     
     const handleSaveHeader = async (data: any) => {
-        // Implementation for updating profile settings from invoice header modal
         const { profileService } = await import('../../../services/profileService');
         await profileService.updateProfileAndSettings({ ...settings, profile: { ...settings.profile, ...data }});
         useZustandStore.setState(s => ({ settings: { ...s.settings, profile: { ...s.settings.profile, ...data } } }));

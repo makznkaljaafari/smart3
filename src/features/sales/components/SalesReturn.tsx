@@ -87,9 +87,9 @@ export const SalesReturn: React.FC = () => {
             returnDate: returnDate,
             notes: notes,
             refundMethod: refundMethod as any,
-            items: returnItems.filter(i => i.returnQuantity > 0).map(i => ({
+            items: returnItems.filter(i => (i as any).returnQuantity > 0).map(i => ({
                 product_id: i.productId,
-                quantity: i.returnQuantity,
+                quantity: (i as any).returnQuantity,
                 price: i.unitPrice,
             })),
         };
@@ -97,7 +97,8 @@ export const SalesReturn: React.FC = () => {
         const { error: serviceError } = await salesService.createSaleReturn(returnData);
 
         if (serviceError) {
-            addToast({ message: `فشل حفظ المرتجع: ${serviceError.message}`, type: 'error' });
+            // Fix: Cast serviceError to any to safely access message
+            addToast({ message: `فشل حفظ المرتجع: ${(serviceError as any).message || 'Error'}`, type: 'error' });
         } else {
             addToast({ message: 'تم حفظ مرتجع المبيع بنجاح!', type: 'success' });
             setOriginalInvoice(null);
@@ -164,7 +165,7 @@ export const SalesReturn: React.FC = () => {
                                         <td className="p-3">
                                             <input 
                                                 type="number" 
-                                                value={item.returnQuantity} 
+                                                value={(item as any).returnQuantity} 
                                                 onChange={e => handleQuantityChange(idx, parseInt(e.target.value) || 0)}
                                                 className="w-20 p-1 text-center border rounded dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-orange-400 outline-none"
                                                 min={0}

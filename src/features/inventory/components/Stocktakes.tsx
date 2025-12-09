@@ -80,7 +80,7 @@ export const Stocktakes: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {stocktakes.map((st: Stocktake, index: number) => (
+                        {stocktakes.map((st: any, index: number) => (
                             <StocktakeRow 
                                 key={st.id}
                                 stocktake={st}

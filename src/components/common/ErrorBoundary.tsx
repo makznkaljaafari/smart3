@@ -1,5 +1,5 @@
 
-import React, { ErrorInfo, ReactNode } from 'react';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { HoloButton } from '../ui/HoloButton';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { translations } from '../../lib/i18n';
@@ -59,7 +59,7 @@ const FallbackComponent: React.FC<{ onRefresh: () => void, onHome: () => void, e
     );
 }
 
-export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   state: ErrorBoundaryState = {
     hasError: false,
     error: null,
