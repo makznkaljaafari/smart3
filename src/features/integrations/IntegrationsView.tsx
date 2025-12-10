@@ -14,6 +14,15 @@ import { HoloButton } from '../../components/ui/HoloButton';
 
 type IntegrationTab = 'rules' | 'connections' | 'webhooks' | 'log' | 'roadmap';
 
+// Common interface for child components in this view
+interface CommonIntegrationProps {
+    localSettings: SettingsState;
+    setLocalSettings: React.Dispatch<React.SetStateAction<SettingsState>>;
+    t: Record<string, string>;
+    theme: AppTheme;
+    lang: 'ar' | 'en';
+}
+
 export const IntegrationsView: React.FC = () => {
     const { theme, lang, settings, authUser, addToast, setSettings, currentCompany } = useZustandStore(state => ({
         theme: state.theme,
@@ -25,7 +34,7 @@ export const IntegrationsView: React.FC = () => {
         currentCompany: state.currentCompany,
     }));
     const t = translations[lang];
-    const isDark = theme === 'dark';
+    const isDark = theme.startsWith('dark');
 
     const [activeTab, setActiveTab] = useState<IntegrationTab>('connections');
     const [localSettings, setLocalSettings] = useState<SettingsState>(settings);
@@ -65,8 +74,7 @@ export const IntegrationsView: React.FC = () => {
     ];
     
     const renderContent = () => {
-        // Fix: Cast theme to any to allow wider AppTheme types if child components have stricter checks
-        const commonProps = { localSettings, setLocalSettings, t, theme: theme as any, lang };
+        const commonProps: CommonIntegrationProps = { localSettings, setLocalSettings, t, theme, lang };
         switch(activeTab) {
             case 'rules': return <AutomationRules {...commonProps} />;
             case 'connections': return <IntegrationConnections {...commonProps} />;

@@ -65,10 +65,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     errorInfo: null
   };
 
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-  }
-
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
     return { hasError: true, error };
   }

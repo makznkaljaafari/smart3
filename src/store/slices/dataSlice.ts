@@ -5,6 +5,10 @@ import { AutomationLog, InventoryLevel } from '../../types';
 import { Account } from '../../features/accounting/types';
 import { Warehouse, Product } from '../../features/inventory/types';
 import { Project } from '../../features/projects/types';
+import { Customer } from '../../features/customers/types';
+import { Expense } from '../../features/expenses/types';
+import { Income } from '../../features/income/types';
+import { Debt } from '../../features/debts/types';
 import { accountService } from '../../services/accountService';
 import { inventoryService } from '../../services/inventoryService';
 import { projectService } from '../../services/projectService';
@@ -18,11 +22,11 @@ export interface DataSlice {
     products: Product[]; 
     inventoryLevels: InventoryLevel[]; 
     
-    // Placeholder arrays to satisfy CombinedState in consumers (Fixes TS Errors)
-    customers: any[];
-    expenses: any[];
-    income: any[];
-    debts: any[];
+    // Core Business Entities
+    customers: Customer[];
+    expenses: Expense[];
+    income: Income[];
+    debts: Debt[];
     
     // Logs
     automationLogs: AutomationLog[];
@@ -69,7 +73,7 @@ export const createDataSlice: StateCreator<CombinedState, [], [], DataSlice> = (
     products: [],
     inventoryLevels: [],
     
-    // Placeholders to satisfy CombinedState interface
+    // Entities (Empty by default, populated by specific views or sync)
     customers: [],
     expenses: [],
     income: [],

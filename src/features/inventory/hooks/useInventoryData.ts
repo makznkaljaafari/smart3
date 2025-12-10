@@ -2,10 +2,17 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useZustandStore } from '../../../store/useStore';
 import { translations } from '../../../lib/i18n';
-import { Product, Toast } from '../../../types';
+import { Product, Toast, InventoryLevel } from '../../../types';
 import { inventoryService } from '../api/inventoryService';
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { callAIProxy } from '../../../lib/aiClient';
+
+export interface InventoryOverviewStats {
+    totalValue: number;
+    lowStockCount: number;
+    totalSku: number;
+    totalCount: number; // Mapped from totalSku for UI compatibility
+}
 
 export const useInventoryData = () => {
     const { lang, authUser, settings, currentCompany, addToast } = useZustandStore(state => ({
@@ -58,8 +65,16 @@ export const useInventoryData = () => {
         enabled: !!currentCompany?.id
     });
 
-    // Cast stats to any to avoid property access errors in consumers
-    const stats: any = statsData?.data || {};
+    // Map the API stats to the interface with explicit typing
+    const stats: InventoryOverviewStats = useMemo(() => {
+        const data = statsData?.data || { totalValue: 0, lowStockCount: 0, totalSku: 0 };
+        return {
+            totalValue: data.totalValue,
+            lowStockCount: data.lowStockCount,
+            totalSku: data.totalSku,
+            totalCount: data.totalSku 
+        };
+    }, [statsData]);
 
     const { data: inventoryLevelsData } = useQuery({
         queryKey: ['inventoryLevels', currentCompany?.id],
@@ -67,12 +82,11 @@ export const useInventoryData = () => {
         enabled: !!currentCompany?.id
     });
 
-    // Aggregate stock totals
+    // Aggregate stock totals with strict typing
     const stockTotals = useMemo(() => {
-        const levels = inventoryLevelsData?.data || [];
+        const levels: InventoryLevel[] = inventoryLevelsData?.data || [];
         const totals: Record<string, number> = {};
-        // Explicitly type 'l' as any to fix build error
-        levels.forEach((l: any) => {
+        levels.forEach((l: InventoryLevel) => {
             totals[l.productId] = (totals[l.productId] || 0) + l.quantity;
         });
         return totals;
@@ -106,7 +120,7 @@ export const useInventoryData = () => {
             queryClient.invalidateQueries({ queryKey: ['products'] });
             queryClient.invalidateQueries({ queryKey: ['inventoryStats'] });
         } catch (e: any) {
-            addToast({ message: e.message, type: 'error' });
+            addToast({ message: e.message || 'Error deleting product', type: 'error' });
         }
     }, [t, addToast, queryClient]);
 
@@ -119,7 +133,7 @@ export const useInventoryData = () => {
             queryClient.invalidateQueries({ queryKey: ['inventoryStats'] });
             handleCloseModals();
         } catch (e: any) {
-            addToast({ message: e.message, type: 'error' });
+            addToast({ message: e.message || 'Error saving product', type: 'error' });
         }
     }, [authUser, editingProduct, addToast, t, queryClient, handleCloseModals]);
 
@@ -138,7 +152,7 @@ export const useInventoryData = () => {
             queryClient.invalidateQueries({ queryKey: ['inventoryStats'] });
             handleCloseModals();
         } catch (e: any) {
-            addToast({ message: e.message, type: 'error' });
+            addToast({ message: e.message || 'Error adjusting stock', type: 'error' });
         }
     }, [adjustingProduct, addToast, t, queryClient, handleCloseModals]);
 
@@ -172,10 +186,9 @@ export const useInventoryData = () => {
         }
     }, [searchTerm, addToast]);
 
-    // Use specific type 'any' for product in filter to fix implicit any error
+    // Client-side filtering wrapper (strict typed pass-through)
     const displayedProducts = useMemo(() => {
-         return products.filter((p: any) => {
-             // Client side filter if needed, otherwise server handles it
+         return products.filter((p: Product) => {
              return true; 
          });
     }, [products]);
@@ -188,7 +201,7 @@ export const useInventoryData = () => {
         setViewMode,
         currentPage,
         setCurrentPage,
-        paginatedProducts: products, // Using server-side paginated list directly
+        paginatedProducts: displayedProducts, 
         stockTotals,
         totalPages,
         productsLoading,
